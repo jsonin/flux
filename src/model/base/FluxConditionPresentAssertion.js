@@ -9,6 +9,8 @@ import hpiConfig from '../hpi-configuration.json';
 import Lang from 'lodash';
 import moment from 'moment';
 import FluxEntry from './FluxEntry';
+import CodeableConcept from '../shr/core/CodeableConcept';
+import CodeSystem from '../shr/core/CodeSystem';
 
 class FluxConditionPresentAssertion extends FluxEntry {
     constructor(json, type, patientRecord) {
@@ -46,9 +48,22 @@ class FluxConditionPresentAssertion extends FluxEntry {
         return this._condition.findingTopicCode.value.coding[0].code.value;
     }
 
+    set code(newCode) {
+        if (!this._condition.value) this._condition.value = new CodeableConcept();
+        if (!this._condition.value.coding[0]) this._condition.value.coding = [ new Coding() ];
+        this._condition.value.coding[0].code = newCode;
+    }
+
     get codeSystem() {
         if (!this._condition.findingTopicCode || !this._condition.findingTopicCode.value) return null;
         return this._condition.findingTopicCode.value.coding[0].codeSystem.value;
+    }
+    
+    set codeSystem(newCodeSystem) {
+        if (!this._condition.value) this._condition.value = new CodeableConcept();
+        if (!this._condition.value.coding[0]) this._condition.value.coding = [ new Coding() ];
+        this._condition.value.coding[0].codeSystem = new CodeSystem();
+        this._condition.value.coding[0].codeSystem.value = newCodeSystem;
     }
 
     get codeURL() {

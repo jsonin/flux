@@ -47,6 +47,38 @@
     "knownParentContexts": "Patient"
   },
   { "type": "SingleHashtagKeyword",
+    "id": "Diagnosis",
+    "name": "diagnosis of",
+    "getData": null,
+    "valueObject": "http://standardhealthrecord.org/spec/mcode/CancerDisorder",
+    "valueObjectAttributes": [  {"name":"code", "attribute":"value", "isSettable":"true", "setMethod":"code", "childShortcut": "DiagnosisCode"}
+    ],
+    "updatePatient": [
+
+    ],
+    "isContext": true,
+    "stringTriggers": [{ "name": "#diagnosis of", "description": "The new diagnosis of a cancer."}],
+    "regexpTrigger": null,
+    "form": null,
+    "formSpec": {   "title": "Diagnosis",
+        "attributes": [ {   "title":"ICD10", "name":"code", "type":"radioButtons", "values": {"category":"diagnosis", "valueSet":"code", "args":"icd10"} }
+                      ]
+    },
+    "structuredPhrase": "#diagnosis of ${code}",
+    "knownParentContexts": "Patient",
+    "description": "The new diagnosis of a cancer.",
+    "structuredPhraseDocumentation": "diagnosisSheet.pdf"
+  },
+  { "type": "CreatorChildService",
+    "id": "DiagnosisCode",
+    "parentAttribute": "code",
+    "service": "http://localhost:8080/codes",
+    "arguments": [ {"name":"type", "value":"ICD10"}, {"name": "toMatch", "value":"$text"} ],
+    "knownParentContexts": "Diagnosis",
+    "description":"Retrieves ICD10 codes that match partial string toMatch.",
+    "shortcutGroupName": "Codes"
+  },
+  { "type": "SingleHashtagKeyword",
     "id": "StagingCreator",
     "name": "staging",
     "getData": null,
