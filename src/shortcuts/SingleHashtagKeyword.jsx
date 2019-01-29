@@ -1,53 +1,15 @@
 import PatientRecord from '../patient/PatientRecord';
 import EntryShortcut from './EntryShortcut';
-import FluxObjectFactory from '../model/FluxObjectFactory';
 import Lang from 'lodash';
 import moment from 'moment';
 
 export default class SingleHashtagKeyword extends EntryShortcut {
     constructor(onUpdate, metadata, patient, shortcutData) {
-        super();
-        this.metadata = metadata;
+        super(metadata);
+        // this.metadata = metadata;
         //this.text = this.getPrefixCharacter() + this.metadata["name"];
-        this.patient = patient;
-        if (Lang.isUndefined(shortcutData) || !shortcutData || Lang.isEmpty(shortcutData)) {
-            this.object = FluxObjectFactory.createInstance({}, this.metadata["valueObject"], patient);
-            this.isObjectNew = true;
-        } else {
-            const dataObj = JSON.parse(shortcutData);
-            this.object = patient.getEntryById(dataObj.entryId);
-            // We want to try and get this object -- if there is none, make a new one
-            this.isObjectNew = !this.object;
-            if (!this.object) { 
-                this.object = FluxObjectFactory.createInstance({}, this.metadata["valueObject"], patient);
-            }
-        }
-        this.setValueObject(this.object);
-
-        // get attribute descriptions
-        const metadataVOA = this.metadata["valueObjectAttributes"];
-        this.valueObjectAttributes = {};
-        this.values = {};
-        this.isSet = {};
-        metadataVOA.forEach((attrib) => {
-            this.isSet[attrib.name] = false;
-            if (Lang.isUndefined(attrib["attribute"])) {
-                this.values[attrib.name] = false;
-                attrib["attributePath"] = null;
-                attrib["type"] = "boolean";
-            } else {
-                if (attrib["attribute"].includes("[]")) {
-                    attrib["type"] = "list";
-                } else {
-                    attrib["type"] = "string";
-                }
-                attrib["attributePath"] = attrib["attribute"].split(".");
-
-            }
-            this.valueObjectAttributes[attrib.name] = attrib;
-        });
-        this.onUpdate = onUpdate;
-        this.setAttributeValue = this.setAttributeValue.bind(this);
+        this.constructValueObject(patient, shortcutData);
+        this.buildValueObjectAttributes(onUpdate);
     }
 
     isContext() {

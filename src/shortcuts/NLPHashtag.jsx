@@ -1,80 +1,42 @@
 import PatientRecord from '../patient/PatientRecord';
-import Shortcut from './Shortcut';
-import FluxObjectFactory from '../model/FluxObjectFactory';
+import EntryShortcut from './EntryShortcut';
 import Lang from 'lodash';
 import moment from 'moment';
 import { createSentenceFromStructuredData } from './ShortcutUtils';
 
-export default class NLPHashtag extends Shortcut {
+export default class NLPHashtag extends EntryShortcut {
     constructor(onUpdate, metadata, patient, shortcutData) {
-        super();
-        this.metadata = metadata;
-        this.text = this.getPrefixCharacter() + this.metadata["name"];
+        super(metadata);
+        // this.metadata = metadata;
+        //this.text = this.getPrefixCharacter() + this.metadata["name"];
         this.nlpTemplate = this.metadata["nlpTemplate"];
-        this.patient = patient;
-        if (Lang.isUndefined(shortcutData) || shortcutData.length === 0) {
-            this.object = FluxObjectFactory.createInstance({}, this.metadata["valueObject"]);
-            this.isObjectNew = true;
-        } else {
-            const dataObj = JSON.parse(shortcutData);
-            this.object = patient.getEntryById(dataObj.entryId);
-            // We want to try and get this object -- if there is none, make a new one
-            this.isObjectNew = !this.object;
-            if (!this.object) { 
-                this.object = FluxObjectFactory.createInstance({}, this.metadata["valueObject"]);
-            }
-        }
-        this.setValueObject(this.object);
-
-        // get attribute descriptions
-        const metadataVOA = this.metadata["valueObjectAttributes"];
-        this.valueObjectAttributes = {};
-        this.values = {};
-        this.isSet = {};
-        metadataVOA.forEach((attrib) => {
-            this.isSet[attrib.name] = false;
-            if (Lang.isUndefined(attrib["attribute"])) {
-                this.values[attrib.name] = false;
-                attrib["attributePath"] = null;
-                attrib["type"] = "boolean";
-            } else {
-                if (attrib["attribute"].includes("[]")) {
-                    attrib["type"] = "list";
-                } else {
-                    attrib["type"] = "string";
-                }
-                attrib["attributePath"] = attrib["attribute"].split(".");
-
-            }
-            this.valueObjectAttributes[attrib.name] = attrib;
-        });
-        this.onUpdate = onUpdate;
-        this.setAttributeValue = this.setAttributeValue.bind(this);
+        this.constructValueObject(patient, shortcutData);
+        this.buildValueObjectAttributes(onUpdate);
     }
 
-    initialize(contextManager, trigger = undefined, updatePatient = true) {
-        super.initialize(contextManager, trigger, updatePatient);
+    // initialize(contextManager, trigger = undefined, updatePatient = true) {
+    //     super.initialize(contextManager, trigger, updatePatient);
 
-        const knownParent = this.metadata["knownParentContexts"];
+    //     const knownParent = this.metadata["knownParentContexts"];
 
-        if (knownParent) {
-            this.parentContext = contextManager.getActiveContextOfType(knownParent);
-        } else   {
-            this.parentContext = contextManager.getCurrentContext();
-        }
+    //     if (knownParent) {
+    //         this.parentContext = contextManager.getActiveContextOfType(knownParent);
+    //     } else   {
+    //         this.parentContext = contextManager.getCurrentContext();
+    //     }
 
-        if (!Lang.isUndefined(this.parentContext)) {
-            this.parentContext.addChild(this);
-        }
+    //     if (!Lang.isUndefined(this.parentContext)) {
+    //         this.parentContext.addChild(this);
+    //     }
         
-        // defaulting
-        const metadataVOA = this.metadata["valueObjectAttributes"];
-        metadataVOA.forEach((attrib) => {
-            if (attrib.isSettable && attrib.type !== "list") {
-                this.setAttributeValue(attrib.name, null, true, updatePatient);
-            }
-        });
-    }
+    //     // defaulting
+    //     const metadataVOA = this.metadata["valueObjectAttributes"];
+    //     metadataVOA.forEach((attrib) => {
+    //         if (attrib.isSettable && attrib.type !== "list") {
+    //             this.setAttributeValue(attrib.name, null, true, updatePatient);
+    //         }
+    //     });
+    // }
 
     isContext() {
         return this.metadata.isContext;
@@ -186,7 +148,7 @@ export default class NLPHashtag extends Shortcut {
 
     setAttributeValue(name, value, publishChanges = true, updatePatient = true) {
         const voa = this.valueObjectAttributes[name];
-        if (Lang.isUndefined(voa)) throw new Error("Unknown attribute '" + name + "' for structured phrase '" + this.text + "'");
+        if (Lang.isUndefined(voa)) throw new Error("Unknown attribute '" + name + "' for structured phrase '" + this.getText() + "'");
         this.isSet[name] = (value != null);
         const patientSetMethod = voa["patientSetMethod"];
         const setMethod = voa["setMethod"];

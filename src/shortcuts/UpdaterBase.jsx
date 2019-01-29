@@ -6,8 +6,8 @@ import moment from 'moment';
 
 export default class UpdaterBase extends EntryShortcut {
     constructor(onUpdate, metadata, object) {
-        super();
-        this.metadata = metadata;
+        super(metadata);
+        // this.metadata = metadata;
         //this.text = "#" + this.metadata["name"];
         if (Lang.isUndefined(object)) {
             this.object = null;

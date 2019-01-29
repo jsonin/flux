@@ -1,4 +1,5 @@
 import Shortcut from './Shortcut';
+import FluxObjectFactory from '../model/FluxObjectFactory';
 import Lang from 'lodash';
 import { createSentenceFromStructuredData } from './ShortcutUtils';
 
@@ -6,6 +7,50 @@ export default class EntryShortcut extends Shortcut {
     constructor(metadata) {
         super();
         this.metadata = metadata;
+    }
+
+    constructValueObject(patient, shortcutData) {
+        this.patient = patient;
+        if (Lang.isUndefined(shortcutData) || !shortcutData || shortcutData.length === 0) {
+            this.object = FluxObjectFactory.createInstance({}, this.metadata["valueObject"], patient);
+            this.isObjectNew = true;
+        } else {
+            const dataObj = JSON.parse(shortcutData);
+            this.object = patient.getEntryById(dataObj.entryId);
+            // We want to try and get this object -- if there is none, make a new one
+            this.isObjectNew = !this.object;
+            if (!this.object) { 
+                this.object = FluxObjectFactory.createInstance({}, this.metadata["valueObject"], patient);
+            }
+        }
+        this.setValueObject(this.object);
+    }
+
+    buildValueObjectAttributes(onUpdate) {
+        // get attribute descriptions
+        const metadataVOA = this.metadata["valueObjectAttributes"];
+        this.valueObjectAttributes = {};
+        this.values = {};
+        this.isSet = {};
+        metadataVOA.forEach((attrib) => {
+            this.isSet[attrib.name] = false;
+            if (Lang.isUndefined(attrib["attribute"])) {
+                this.values[attrib.name] = false;
+                attrib["attributePath"] = null;
+                attrib["type"] = "boolean";
+            } else {
+                if (attrib["attribute"].includes("[]")) {
+                    attrib["type"] = "list";
+                } else {
+                    attrib["type"] = "string";
+                }
+                attrib["attributePath"] = attrib["attribute"].split(".");
+
+            }
+            this.valueObjectAttributes[attrib.name] = attrib;
+        });
+        this.onUpdate = onUpdate;
+        this.setAttributeValue = this.setAttributeValue.bind(this);
     }
 
     getAttributeValue(name) {
@@ -24,7 +69,7 @@ export default class EntryShortcut extends Shortcut {
     }
 
     establishParentContext(contextManager, relativeToShortcut = undefined) {
-        super.initialize(contextManager);
+        //super.initialize(contextManager);
         const knownParent = this.metadata["knownParentContexts"];
 
         if (Lang.isUndefined(relativeToShortcut)) {
