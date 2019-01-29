@@ -1,5 +1,7 @@
 import Shortcut from './Shortcut';
 import FluxObjectFactory from '../model/FluxObjectFactory';
+import PatientRecord from '../patient/PatientRecord';
+import moment from 'moment';
 import Lang from 'lodash';
 import { createSentenceFromStructuredData } from './ShortcutUtils';
 
@@ -53,13 +55,177 @@ export default class EntryShortcut extends Shortcut {
         this.setAttributeValue = this.setAttributeValue.bind(this);
     }
 
+    // should this shortcut instance be in context right now (in other words, should it be a tab in context tray)
+    shouldBeInContext() {
+        return this.checkIfAttributesHaveValues(this.metadata["valueObjectAttributes"]);
+    }
+
+    checkIfAttributesHaveValues(voaList) {
+        let value, isSettable;
+        let result = false;
+        voaList.forEach((voa) => {
+            value = this.getAttributeValue(voa.name);
+            isSettable = Lang.isUndefined(voa.isSettable) ? false : (voa.isSettable === "true");
+            if (isSettable) {
+                if (Lang.isArray(value)) {
+                    if (value.length < voa.numberOfItems) {
+                        result = true;
+                        return true;
+                    }
+                } else if (!(this.isSet[voa.name])) {
+                    result = true;
+                    return;
+                }
+            } else {
+                if (value.length > 0) {
+                    result = true;
+                    return;
+                }
+            }
+        });
+        return result;
+    }
+
+    getShortcutType() {
+        return this.metadata["id"];
+    }
+
+    getFormSpec() {
+        return {
+            tagName: this.metadata["form"],
+            props: {
+                updateValue: this.setAttributeValue,
+                object: this.object,
+                ...this.configuration
+            },
+            children: []
+        };
+    }
+
+    onBeforeDeleted() {
+        let result = super.onBeforeDeleted();
+        if (result && this.parentContext) {
+            this.parentContext.removeChild(this);
+        }
+        this.removeFromPatient();
+        return result;
+    }
+
+    getAttributeIsSet(name) {
+        return this.isSet[name];
+    }
+
+    isAttributeSupported(name) {
+        return !Lang.isUndefined(this.valueObjectAttributes[name]);
+    }
+
     getAttributeValue(name) {
+        const voa = this.valueObjectAttributes[name];
+        if (Lang.isNull(voa["attributePath"])) {
+            return this.values[voa["name"]];
+        } else {
+            const attributePath = voa["attributePath"];
+            return this._followPath(this.object, attributePath, 0);
+        }
     }
 
     setAttributeValue(name, value, publishChanges = true, updatePatient = true) {
+        const voa = this.valueObjectAttributes[name];
+        if (Lang.isUndefined(voa)) throw new Error("Unknown attribute '" + name + "' for structured phrase '" + this.getText() + "'"); //this.text
+        this.isSet[name] = (value != null);
+        const patientSetMethod = voa["patientSetMethod"];
+        const setMethod = voa["setMethod"];
+        if (value == null && voa.default) {
+            value = voa.default;
+            if (value === "$today") {
+                value = new moment().format('D MMM YYYY');
+            }
+        }
+        if (Lang.isUndefined(patientSetMethod)) {
+            if (Lang.isUndefined(setMethod)) {
+                this.values[name] = value;
+            } else {
+                if (voa["type"] === "list" && !Lang.isArray(value)) {
+                    let list = this.getAttributeValue(name);
+                    list.push(value);
+                    Lang.set(this.object, setMethod, list);
+                } else {
+                    Lang.set(this.object, setMethod, value);
+                }
+            }
+        } else {
+            if (voa["type"] === "list" && !Lang.isArray(value)) {
+                let list = this.getAttributeValue(name);
+                list.push(value);
+                PatientRecord[patientSetMethod](this.object, list);
+            } else {
+                PatientRecord[patientSetMethod](this.object, value);
+            }
+        }
+        if (this.isContext()) this.updateContextStatus();
+        if (this.onUpdate && updatePatient) this.onUpdate(this);
+        if (publishChanges) {
+            this.notifyValueChangeHandlers(name);
+        }
+    }
+
+    getLabel() {
+        return this.metadata["name"];
     }
 
     getText() {
+        return this.metadata["name"];
+    }
+
+    getResultText() {
+        if (Lang.isUndefined(this.object.entryInfo)) return this.getText();
+        return `${this.initiatingTrigger}[[{"entryId":${this.getEntryId()}}]]`;
+    }
+
+    getId() {
+        return this.metadata["id"];
+    }
+
+    removeFromPatient() {
+        if (this.isObjectNew) return;
+        const undoUpdatePatientSpecList = this.metadata["undoUpdatePatient"];
+        if (undoUpdatePatientSpecList) {
+            undoUpdatePatientSpecList.forEach((undoUpdatePatientSpec) => {
+                this.callMethod(this.patient, undoUpdatePatientSpec);
+            });
+        } else {
+            this.patient.removeEntryFromPatient(this.object);
+        }
+    }
+
+    updatePatient(patient, contextManager, clinicalNote) {
+        if (this.isObjectNew) {
+            const updatePatientSpecList = this.metadata["updatePatient"];
+            let result;
+            if (updatePatientSpecList) {
+                updatePatientSpecList.forEach((updatePatientSpec) => {
+                    result = this.callMethod(patient, updatePatientSpec, clinicalNote);
+                    if (Lang.isNull(result)) {
+                        this.isObjectNew = false;
+                        return;
+                    }
+                    if (result) {
+                        if (Lang.isObject(result)) this.object = result;
+                    }
+                });
+                if (Lang.isNull(result)) {
+                    this.isObjectNew = false;
+                    return;
+                } 
+            } else {
+                this.object = patient.addEntryToPatientWithPatientFocalSubject(this.object, clinicalNote);
+            }
+            this.isObjectNew = false;
+        }
+    }
+
+    getPrefixCharacter() {
+        return "#";
     }
 
     hasParentContext() {
@@ -109,6 +275,10 @@ export default class EntryShortcut extends Shortcut {
         }       
     }
 
+    isContext() {
+        return this.metadata.isContext;
+    }
+
     hasData() {
         const voaList = this.metadata["valueObjectAttributes"];
         let value, isSettable;
@@ -135,7 +305,8 @@ export default class EntryShortcut extends Shortcut {
     }
 
     getAsString() {        
-        return createSentenceFromStructuredData(this.metadata["structuredPhrase"], this.getAttributeValue.bind(this), this.getText(), false);
+        return createSentenceFromStructuredData(this.metadata["structuredPhrase"], 
+            this.getAttributeValue.bind(this), this.getText(), false);
     }
 
     _followPath(object, attributePath, startIndex) {
@@ -165,5 +336,83 @@ export default class EntryShortcut extends Shortcut {
             if (Lang.isUndefined(result)) return null;
         }
         return result;
+    }
+
+    callMethod(patient, spec, clinicalNote) {
+        //{"object":"patient", "method": "addObservationToCondition", "args": [ "$valueObject", "$parentValueObject"]}
+        const obj = spec["object"];
+        const method = spec["method"];
+        const listAttribute = spec["listAttribute"];
+        const attribute = spec["attribute"];
+        const argSpecs = spec["args"];
+        let args = argSpecs.map((argSpec) => {
+            if (argSpec === "$valueObject") return this.object;
+            if (argSpec === "$parentValueObject") {
+               
+                if(!this.parentContext){
+                    return null;
+                } 
+                return this.parentContext.getValueObject();
+            } 
+            if (argSpec === "$clinicalNote") return clinicalNote;
+            return argSpec;
+        });
+        if (Lang.isUndefined(listAttribute) && Lang.isUndefined(attribute)) {
+            if (obj === "patient") {
+                return patient[method](...args);
+            } else if (obj === "$clinicalNote") {
+                return clinicalNote[method](...args);
+            } else if (obj === "$valueObject") {
+                return this.object[method](...args);
+            } else if (obj === "$parentValueObject") {
+                if (!Lang.isUndefined(this.parentContext))
+                    return this.parentContext.getValueObject()[method](...args);
+                else
+                    return null;
+            } else {
+                console.error("unsupported object type: " + obj + " for updatePatient");
+            }
+        } else if (Lang.isUndefined(listAttribute)) {
+            if (args.length !== 1) {
+                console.warn("attribute only supports a single argument which is the new value for the attribute: " + spec["id"]);
+            }
+            if (obj === "patient") {
+                return patient[attribute] = args[0];
+            } else if (obj === "$clinicalNote") {
+                return clinicalNote[attribute] = args[0];
+            } else if (obj === "$valueObject") {
+                return this.object[attribute] = args[0];
+            } else if (obj === "$parentValueObject") {
+                if (!Lang.isUndefined(this.parentContext))
+                    return this.parentContext.getValueObject()[attribute] = args[0];
+                else
+                    return null;
+            } else {
+                console.error("unsupported object type: " + obj + " for updatePatient");
+            }
+        } else {
+            if (obj === "patient") {
+                let list = Lang.get(patient, listAttribute);
+                args.forEach((a) => list.push(a));
+                Lang.set(patient, listAttribute, list);
+                return this.object;
+            } else if (obj === "$valueObject") {
+                let list = Lang.get(this.object, listAttribute);
+                args.forEach((a) => list.push(a));
+                Lang.set(this.object, listAttribute, list);
+                return this.object;
+            } else if (obj === "$parentValueObject") {
+                if (!Lang.isUndefined(this.parentContext)) {
+                    let list = Lang.get(this.parentContext.getValueObject(), listAttribute);
+                    args.forEach((a) => list.push(a));
+                    Lang.set(this.parentContext.getValueObject(), listAttribute, list);
+                    return this.object;
+                } else
+                    return null;
+            } else {
+                console.error("unsupported object type: " + obj + " for updatePatient");
+            }
+        }
+        return null;
     }
 }
