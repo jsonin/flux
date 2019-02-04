@@ -35,7 +35,9 @@ class Placeholder {
     onUpdate = (shortcut) => {
         if (shortcut.hasParentContext()) {
             this._numUpdates++;
-            shortcut.updatePatient(this._patient, this._contextManager, this._clinicalNote);
+            if (shortcut.doesUpdatePatient()) {
+                shortcut.updatePatient(this._patient, this._contextManager, this._clinicalNote);
+            }
         }
     }
 

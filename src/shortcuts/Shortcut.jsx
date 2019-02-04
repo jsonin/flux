@@ -46,8 +46,12 @@ class Shortcut extends Context {
 
     getLabel() {
         throw new Error("Invalid context. " + this.constructor.name);
-    }   
-        
+    }
+
+    doesUpdatePatient() {
+        return false;
+    }
+
     updatePatient(patient, contextManager) {
         throw new Error("update patient not implemented for " + this.constructor.name);
     }

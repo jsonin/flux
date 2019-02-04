@@ -9,6 +9,7 @@ import ValueSetManager from '../lib/ValueSetManager';
 import shortcutMetadata from './Shortcuts.json';
 import Lang from 'lodash';
 import NLPHashtag from './NLPHashtag';
+import SingleHashtagService from './SingleHashtagService';
 
 // Given a trigger object, add it and any subsidiary trigger objects to our triggersPerShortcut map
 function addTriggerForCurrentShortcut(triggerObject, currentShortcut) {
@@ -426,7 +427,11 @@ class ShortcutManager {
     }
 
     isShortcutInstanceOfNLPHashtag(shortcut) {
-        return shortcut instanceof NLPHashtag
+        return shortcut instanceof NLPHashtag;
+    }
+
+    isShortcutInstanceOfSingleHashtagService(shortcut) {
+        return shortcut instanceof SingleHashtagService;
     }
 }
 

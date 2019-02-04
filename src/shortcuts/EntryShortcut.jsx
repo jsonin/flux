@@ -198,6 +198,10 @@ export default class EntryShortcut extends Shortcut {
         }
     }
 
+    doesUpdatePatient() {
+        return true;
+    }
+
     updatePatient(patient, contextManager, clinicalNote) {
         if (this.isObjectNew) {
             const updatePatientSpecList = this.metadata["updatePatient"];

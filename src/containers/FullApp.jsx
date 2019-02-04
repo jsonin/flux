@@ -296,7 +296,9 @@ export class FullApp extends Component {
     handleShortcutUpdate = (s) => {
         let p = this.state.patient;
         let note = this.state.openClinicalNote;
-        s.updatePatient(p, this.contextManager, note);
+        if (s.doesUpdatePatient()) {
+            s.updatePatient(p, this.contextManager, note);
+        }
     }
 
     setOpenClinicalNote = (openClinicalNote) => {

@@ -14,7 +14,7 @@ function createOpts(opts) {
     return opts;
 }
 
-function ShortcutService(opts) {
+function ServiceHashtagPlugin(opts) {
     opts = createOpts(opts);
     const shortcutManager = opts.shortcutManager;
     const contextManager = opts.contextManager;
@@ -38,35 +38,34 @@ function ShortcutService(opts) {
     const stopRegexp = new RegExp(`(${stopCharacters.join('|')})(${phraseDelimiters.join('|')})`, 'i')
     const endOfSentenceRegexp = new RegExp(stopRegexp.source + `$`, 'i')
     const NLPHashtagPhraseRegexp = new RegExp(`(.*)` + endOfSentenceRegexp.source, 'i')
-
-    // Return the service-based structured phrases in context if there are any, else return nothing
-    function getServiceBasedStructuredPhrases() { 
-        // Check the activeContexts for anything that is an instance of NLPHashtag
+    // Return the NLP hasgtag if there is one, else return nothing
+    function getSingleHashtagService() { 
+        // Check the activeContexts for anything that is an instance of SingleHashtagService
         return Collection.find(contextManager.getActiveContexts(), ((shortcut, i) => {
-            return shortcutManager.isShortcutInstanceOfNLPHashtag(shortcut);	
+            return shortcutManager.isShortcutInstanceOfSingleHashtagService(shortcut);	
         }))
     } 
 
-    // Get the slate Range based on the NLPphrase
-    function getRangeBasedOnPhrase (keyAfterNLPShortcut, NLPphrase) { 
+    // Get the slate Range based on the SingleHashtagService
+    function getRangeBasedOnPhrase (keyAfterSingleHashtagService, phrase) { 
         // Return nothing if text is not found in this node
         return {
-            anchorKey: keyAfterNLPShortcut,
-            anchorOffset: NLPphrase.orig_start,
-            focusKey: keyAfterNLPShortcut,
-            focusOffset: NLPphrase.orig_end,
+            anchorKey: keyAfterSingleHashtagService,
+            anchorOffset: phrase.orig_start,
+            focusKey: keyAfterSingleHashtagService,
+            focusOffset: phrase.orig_end,
             isFocused: false,
             isBackward: false,
         }
     }
 
     // Get a text representation of the sentence following the NLPHashtag
-    function getSentenceContainingNLPHashtag(editorState, NLPShortcut) { 
-        // Get the block immediately following the NLPShortcut
-        const nodeAfterNLPShortcut = editorState.document.getNextSibling(NLPShortcut.key);
+    function getSentenceContainingNLPHashtag(editorState, SingleHashtagServiceShortcut) { 
+        // Get the block immediately following the SingleHashtagServiceShortcut
+        const nodeAfterSingleHashtagServiceShortcut = editorState.document.getNextSibling(SingleHashtagServiceShortcut.key);
         // Relevant selection is from the end of the shortcut to the end of my selection
         const relevantSelection = { 
-            anchorKey: nodeAfterNLPShortcut.key,
+            anchorKey: nodeAfterSingleHashtagServiceShortcut.key,
             anchorOffset: 0,
             focusKey: editorState.endKey,
             focusOffset: editorState.endOffset,
@@ -105,9 +104,9 @@ function ShortcutService(opts) {
     }
     
     // Extracts the fully-formed phrase for an NLP shortcut if there is one, else return nothing
-    function extractNLPHashtagFullPhrase(editorState, editor, NLPShortcut) { 
+    function extractsingleHashtagServiceFullPhrase(editorState, editor, SingleHashtagServiceShortcut) { 
         // Find the sentence that contains the NLP hashtag
-        const textRepresentation = getSentenceContainingNLPHashtag(editorState, NLPShortcut)
+        const textRepresentation = getSentenceContainingNLPHashtag(editorState, SingleHashtagServiceShortcut)
         // Check if that sentence contains a stopCharacter followed by a finishedTokenSymbol
         const matches = textRepresentation.match(NLPHashtagPhraseRegexp);
         if (matches) { 
@@ -116,13 +115,13 @@ function ShortcutService(opts) {
     }
 
     // Parse canonicalization to retrieve keyword 	
-    function parseKeywordFromCanonicalizationBasedOnPhrase(canonicalization, NLPShortcutMetadata) { 
-        const pathToCanonicalization = NLPShortcutMetadata["pathToCanonicalization"]
-        const prefixToPrepend = NLPShortcutMetadata["prefixForCanonicalization"]
+    function parseKeywordFromCanonicalizationBasedOnPhrase(canonicalization, SingleHashtagServiceShortcutMetadata) { 
+        const pathToCanonicalization = SingleHashtagServiceShortcutMetadata["pathToCanonicalization"]
+        const prefixToPrepend = SingleHashtagServiceShortcutMetadata["prefixForCanonicalization"]
         if (Lang.isUndefined(pathToCanonicalization)) { 
             const err = {
                 name: "CanonicalizationParseError",
-                msg: `Failed to get keyword from canonoicalization ${canonicalization} based on metadata: ${JSON.stringify(NLPShortcutMetadata)}`,
+                msg: `Failed to get keyword from canonoicalization ${canonicalization} based on metadata: ${JSON.stringify(SingleHashtagServiceShortcutMetadata)}`,
             };
             console.error(err.msg);
             throw err;	
@@ -143,24 +142,24 @@ function ShortcutService(opts) {
 
     // Given an array of phrases, parse each one, create shortcuts, and insert them into the editorTransform.
     // Return the updated editorTransform
-    function parseArryOfPhrases(arrayOfPhrases, editorTransform, NLPShortcut) { 
+    function parseArryOfPhrases(arrayOfPhrases, editorTransform, SingleHashtagServiceShortcut) { 
         // console.log(arrayOfPhrases);
         if (Lang.isUndefined(arrayOfPhrases)) { 
             return editorTransform; 
         } else { 
             let editorState = editorTransform.state;
-            const nodeAfterNLPShortcut = editorState.document.getNextSibling(NLPShortcut.key);
+            const nodeAfterSingleHashtagServiceShortcut = editorState.document.getNextSibling(SingleHashtagServiceShortcut.key);
             let originalTextRange;
             for (const phraseValue of arrayOfPhrases) { 
                 const typeOfPhrase = phraseValue.name;
-                const NLPShortcutMetadata = shortcutManager.getShortcutMetadata(typeOfPhrase);
-                const NLPKeyword = parseKeywordFromCanonicalizationBasedOnPhrase(phraseValue.canonicalization, NLPShortcutMetadata).toLowerCase();
-                const NLPShortcut = createShortcut(null, NLPKeyword);
-                NLPShortcut.setSource("NLP Engine");
+                const SingleHashtagServiceShortcutMetadata = shortcutManager.getShortcutMetadata(typeOfPhrase);
+                const NLPKeyword = parseKeywordFromCanonicalizationBasedOnPhrase(phraseValue.canonicalization, SingleHashtagServiceShortcutMetadata).toLowerCase();
+                const SingleHashtagServiceShortcut = createShortcut(null, NLPKeyword);
+                SingleHashtagServiceShortcut.setSource("NLP Engine");
                 // get range for originalText
-                originalTextRange = getRangeBasedOnPhrase(nodeAfterNLPShortcut.key, phraseValue)
+                originalTextRange = getRangeBasedOnPhrase(nodeAfterSingleHashtagServiceShortcut.key, phraseValue)
                 // Insert the structured field at this range; 
-                editorTransform = insertStructuredFieldTransformAtRange(editorTransform, NLPShortcut, new Selection(originalTextRange))
+                editorTransform = insertStructuredFieldTransformAtRange(editorTransform, SingleHashtagServiceShortcut, new Selection(originalTextRange))
             }
             return editorTransform.focus();
         }
@@ -184,12 +183,12 @@ function ShortcutService(opts) {
     }
 
     // Given a list of phrases, parse them and insert them all in reverse order, changing editor state accordingly.
-    function parsePhrases(phrases, NLPShortcut) { 
+    function parsePhrases(phrases, SingleHashtagServiceShortcut) { 
         const editorState = getEditorState();
         let editorTransform = editorState.transform();
         const phrasesInOrder = orderPhrasesForReverseInsertion(phrases)
         // update editorTransform after parsing phrases
-        editorTransform = parseArryOfPhrases(phrasesInOrder, editorTransform, NLPShortcut);
+        editorTransform = parseArryOfPhrases(phrasesInOrder, editorTransform, SingleHashtagServiceShortcut);
         // Update editorState if there were any actual changes
         if (editorTransform.operations.length > 0) { 
             setEditorState(editorTransform.focus().apply())
@@ -197,10 +196,10 @@ function ShortcutService(opts) {
     }
 
     // Given data extracted from NLP engine, parse it for meaningful feedback and use that to perform necessary insertions.
-    function processNLPEngineData(NLPShortcut, data) { 
-        if (!(NLPShortcut instanceof Shortcut) && typeof NLPShortcut === 'object' && NLPShortcut !== null && data === undefined) { 
+    function processNLPEngineData(SingleHashtagServiceShortcut, data) { 
+        if (!(SingleHashtagServiceShortcut instanceof Shortcut) && typeof SingleHashtagServiceShortcut === 'object' && SingleHashtagServiceShortcut !== null && data === undefined) { 
             // If we haven't bound a valid shortcut, and the first arg looks like data, we should define data as such
-            data = NLPShortcut
+            data = SingleHashtagServiceShortcut
         }
         isFetchingAsyncData = false;
         updateFetchingStatus(isFetchingAsyncData)
@@ -214,7 +213,7 @@ function ShortcutService(opts) {
             return  
         } else { 
             // There should be some phrases we want to insert.
-            parsePhrases(phrases, NLPShortcut)	
+            parsePhrases(phrases, SingleHashtagServiceShortcut)	
             return
         }
     }
@@ -242,18 +241,18 @@ function ShortcutService(opts) {
     }		
     
     // Sends off a request to the NLP endpoint
-    function fetchNLPExtraction(NLPShortcut, NLPHashtagPhrase) { 
+    function fetchServiceResults(SingleHashtagServiceShortcut, phrase) { 
         if (isFetchingAsyncData) {
             return
         }
         // Else, we want to fetch data
         isFetchingAsyncData = true;
         updateFetchingStatus(isFetchingAsyncData)
-        const NLPShortcutName = NLPShortcut.nlpTemplate;
-        fetch(`${API_ENDPOINT}?template=${NLPShortcutName}&sentence=${NLPHashtagPhrase}`)
+        const SingleHashtagServiceShortcutName = SingleHashtagServiceShortcut.nlpTemplate;
+        fetch(`${API_ENDPOINT}?template=${SingleHashtagServiceShortcutName}&sentence=${phrase}`)
             .then(processNLPEngineResponse)
             .then(
-                processNLPEngineData.bind(null,NLPShortcut),
+                processNLPEngineData.bind(null,SingleHashtagServiceShortcut),
                 // processNLPEngineData,
                 // Note: it's important to handle errors here
                 // instead of a catch() block so that we don't swallow
@@ -266,14 +265,14 @@ function ShortcutService(opts) {
     // Everytime a change is made to the editor, check to see if NLP should be parsed
     function onChange (editorState, editor) {
         // Check the structuredFieldMapManager for NLP Hashtags 
-        const serviceBasedStructuredPhrases = getServiceBasedStructuredPhrases()
+        const singleHashtagServiceShortcut = getSingleHashtagService()
         // is there an NLP hashtag?
-        if (!Lang.isUndefined(serviceBasedStructuredPhrases)) {
+        if (!Lang.isUndefined(singleHashtagServiceShortcut)) {
             // Pull out NLP hashtag FullPhrase (one ending in a stop character) if there is one
-            const contentToProcess = extractNLPHashtagFullPhrase(editorState, editor, NLPShortcut)
-            if (!Lang.isUndefined(contentToProcess)) { 
+            const singleHashtagServicePhrase = extractsingleHashtagServiceFullPhrase(editorState, editor, singleHashtagServiceShortcut)
+            if (!Lang.isUndefined(singleHashtagServicePhrase)) { 
                 // send message out to NLPEndpoint 
-                fetchNLPExtraction(serviceBasedStructuredPhrases, contentToProcess)
+                fetchServiceResults(singleHashtagServiceShortcut, singleHashtagServicePhrase)
             } else { 
                 return
             }
@@ -287,4 +286,4 @@ function ShortcutService(opts) {
     };
 }
 
-export default NLPHashtagPlugin
+export default ServiceHashtagPlugin

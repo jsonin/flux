@@ -66,7 +66,8 @@ export default class NoteParser {
         shortcut.setSource("parsed note");
         shortcut.initialize(this.contextManager, triggerOrKeywordText, true, triggerOrKeywordObject.selectedValue);
      
-        if (shortcut instanceof CreatorBase || shortcut instanceof SingleHashtagKeyword || shortcut instanceof UpdaterBase) {
+        //if (shortcut instanceof CreatorBase || shortcut instanceof SingleHashtagKeyword || shortcut instanceof UpdaterBase) {
+        if (shortcut.doesUpdatePatient()) {
             shortcut.updatePatient(this.patient, this.contextManager, null);
         }
         

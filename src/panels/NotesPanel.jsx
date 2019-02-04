@@ -7,7 +7,6 @@ import Lang from 'lodash';
 import FluxNotesEditor from '../notes/FluxNotesEditor';
 import Button from '../elements/Button';
 import NoteAssistant from '../notes/NoteAssistant';
-import NoteParser from '../noteparser/NoteParser';
 import './NotesPanel.css';
 import PointOfCare from '../notes/PointOfCare';
 import { createSentenceFromStructuredData } from '../shortcuts/ShortcutUtils';
@@ -33,8 +32,6 @@ export default class NotesPanel extends Component {
             shortcutKey: null,
             shortcutType: null,
         };
-
-        this.noteParser = new NoteParser(this.props.shortcutManager, this.props.contextManager);
     }
 
     componentWillReceiveProps = (nextProps) => {
