@@ -4,8 +4,9 @@ import Slate from '../lib/slate';
 import Lang from 'lodash';
 import FontAwesome from 'react-fontawesome';
 import ContextPortal from '../context/ContextPortal';
-import SuggestionPortalShortcutSearchIndex from './SuggestionPortalShortcutSearchIndex'
-import SuggestionPortalPlaceholderSearchIndex from './SuggestionPortalPlaceholderSearchIndex'
+import SuggestionPortalShortcutSearchIndex from './SuggestionPortalShortcutSearchIndex';
+import SuggestionPortalPlaceholderSearchIndex from './SuggestionPortalPlaceholderSearchIndex';
+import SuggestionPortalShortcutServiceSearchIndex from './SuggestionPortalShortcutServiceSearchIndex';
 // versions 0.20.3-0.20.7 of Slate seem to have an issue.
 // when we change the selection and give focus in our key handlers, Slate changes the selection including
 // focus and then immediately takes focus away. Not an issue in 0.20.2 and older. package.json currently
@@ -139,7 +140,19 @@ class FluxNotesEditor extends React.Component {
             trigger: '#',
         });
         this.plugins.push(this.suggestionsPluginCreators)
-        
+
+        // setup service-based suggestions plugin (autocomplete)
+        const serviceSuggestionPortalSearchIndex = new SuggestionPortalShortcutServiceSearchIndex([], '$', this.props.shortcutManager);
+        this.contextManager.subscribe(serviceSuggestionPortalSearchIndex, serviceSuggestionPortalSearchIndex.updateIndex)
+        this.suggestionPortalSearchIndexes.push(serviceSuggestionPortalSearchIndex)
+        this.suggestionsPluginServices = SuggestionsPlugin({
+            capture: /$([\w\s\-,]*)/,
+            onEnter: this.choseSuggestedShortcut.bind(this),
+            suggestions: serviceSuggestionPortalSearchIndex.search,
+            trigger: '$',
+        });
+        this.plugins.push(this.suggestionsPluginServices)
+
         // setup inserter suggestions plugin (autocomplete)
         const inserterSuggestionPortalSearchIndex = new SuggestionPortalShortcutSearchIndex([], '@', this.props.shortcutManager);
         this.contextManager.subscribe(inserterSuggestionPortalSearchIndex, inserterSuggestionPortalSearchIndex.updateIndex)

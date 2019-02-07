@@ -36,44 +36,46 @@ function SingleHashtagKeywordStructuredFieldPlugin(opts) {
         if (relevantSingleHashtagKeywordMappings.length !== 0) {
             // Get all relevant keywordShortcuts, 
             const listOfKeywordShortcutClasses = findRelevantKeywordShortcutClasses(listOfSingleHashtagKeywordShortcutMappings).reduce((accumulator, listOfKeywordsForShortcut) => accumulator.concat(listOfKeywordsForShortcut));
+            console.log(listOfKeywordShortcutClasses);
             for (const keywordClass of listOfKeywordShortcutClasses) {
                 // Scan text to find any necessary replacements 
                 let keywords = getKeywordsBasedOnShortcutClass(keywordClass);
-                const prefix = shortcutManager.getShortcutPrefix(keywordClass);
-                
-                // Copy keywords and add prefix to so that instances of keywords with prefixes are also replaced
-                const keywordsWithPrefix = Lang.cloneDeep(keywords);
-                keywordsWithPrefix.forEach(keywordWithPrefix => {
-                    if (prefix) keywordWithPrefix.name = `${prefix}${keywordWithPrefix.name}`;
-                });
-                keywords = keywords.concat(keywordsWithPrefix);
-              
+                if (keywords.length > 0) {
+                    const prefix = shortcutManager.getShortcutPrefix(keywordClass);
 
-                // Sort keywords based on length -- we want to match longest options first
-                keywords.sort(_sortKeywordByNameLength);
-                const keywordInClosetBlock = scanTextForKeywordObject(curNode, keywords)
-                if (!Lang.isUndefined(keywordInClosetBlock)) {
-                    const keywordText = keywordInClosetBlock.name.toLowerCase();
-                    const newKeywordShortcut = createShortcut(null, keywordText);
-                    newKeywordShortcut.setSource("Keyword");
-                    // KeywordRange never be null -- we've already confirmed the existance of the keyword
-                    let keywordRange;
-                    if (curNode.nodes) {
-                        for (const childNode of curNode.nodes) {
-                            if(childNode.type !== 'structured_field'){
+                    // Copy keywords and add prefix to so that instances of keywords with prefixes are also replaced
+                    const keywordsWithPrefix = Lang.cloneDeep(keywords);
+                    keywordsWithPrefix.forEach(keywordWithPrefix => {
+                        if (prefix) keywordWithPrefix.name = `${prefix}${keywordWithPrefix.name}`;
+                    });
+                    keywords = keywords.concat(keywordsWithPrefix);
+
+                    // Sort keywords based on length -- we want to match longest options first
+                    keywords.sort(_sortKeywordByNameLength);
+                    const keywordInClosetBlock = scanTextForKeywordObject(curNode.text, keywords)
+                    if (!Lang.isUndefined(keywordInClosetBlock)) {
+                        const keywordText = keywordInClosetBlock.name.toLowerCase();
+                        const newKeywordShortcut = createShortcut(null, keywordText);
+                        newKeywordShortcut.setSource("Keyword");
+
+                        // KeywordRange never be null -- we've already confirmed the existance of the keyword
+                        let keywordRange;
+                        if (curNode.nodes) {
+                            for (const childNode of curNode.nodes) {
                                 keywordRange = getRangeForKeyword(childNode, keywordText);
+                                if (keywordRange) break;
                             }
-                            if (keywordRange) break;
+                        } else {
+                            keywordRange = getRangeForKeyword(curNode, keywordText);
                         }
-                    } else {
-                        keywordRange = getRangeForKeyword(curNode, keywordText);
+
+                        // Remove keyword from block, using first character as the prefix
+                        curTransform = curTransform.select(keywordRange).delete();
+
+                        // Add shortcut to text; update curNode and curText
+                        curTransform = insertStructuredFieldTransform(curTransform, newKeywordShortcut)
+                        curNode = curTransform.state.endBlock
                     }
-                    // Remove keyword from block, using first character as the prefix
-                    curTransform = curTransform.select(keywordRange).delete();
-                    
-                    // Add shortcut to text; update curNode and curText
-                    curTransform = insertStructuredFieldTransform(curTransform, newKeywordShortcut)
-                    curNode = curTransform.state.endBlock
                 }
             }
         }

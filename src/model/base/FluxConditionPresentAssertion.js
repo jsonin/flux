@@ -51,7 +51,7 @@ class FluxConditionPresentAssertion extends FluxEntry {
 
     set code(newCode) {
         if (!this._condition.value) this._condition.value = new CodeableConcept();
-        if (!this._condition.value.coding[0]) this._condition.value.coding = [ new Coding() ];
+        if (!this._condition.value.coding) this._condition.value.coding = [ new Coding() ];
         this._condition.value.coding[0].code = newCode;
     }
 

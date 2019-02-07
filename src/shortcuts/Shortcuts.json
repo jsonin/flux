@@ -46,7 +46,7 @@
     "stringTriggers": [{"name":"@name", "description": "Patient's given and family name"}],
     "knownParentContexts": "Patient"
   },
-  { "type": "SingleHashtagService",
+  { "type": "SingleHashtagKeyword",
     "id": "Diagnosis",
     "name": "diagnosis of",
     "getData": null,

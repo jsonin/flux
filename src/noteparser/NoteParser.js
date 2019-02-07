@@ -3,9 +3,6 @@ import ContextManager from '../context/ContextManager';
 import DataAccess from '../dataaccess/DataAccess';
 import Lang from 'lodash';
 import InsertValue from '../shortcuts/InsertValue';
-import CreatorBase from '../shortcuts/CreatorBase';
-import UpdaterBase from '../shortcuts/UpdaterBase';
-import SingleHashtagKeyword from '../shortcuts/SingleHashtagKeyword';
 
 export default class NoteParser {
 
