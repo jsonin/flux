@@ -36,7 +36,6 @@ function SingleHashtagKeywordStructuredFieldPlugin(opts) {
         if (relevantSingleHashtagKeywordMappings.length !== 0) {
             // Get all relevant keywordShortcuts, 
             const listOfKeywordShortcutClasses = findRelevantKeywordShortcutClasses(listOfSingleHashtagKeywordShortcutMappings).reduce((accumulator, listOfKeywordsForShortcut) => accumulator.concat(listOfKeywordsForShortcut));
-            console.log(listOfKeywordShortcutClasses);
             for (const keywordClass of listOfKeywordShortcutClasses) {
                 // Scan text to find any necessary replacements 
                 let keywords = getKeywordsBasedOnShortcutClass(keywordClass);

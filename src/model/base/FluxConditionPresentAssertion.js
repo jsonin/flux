@@ -12,12 +12,24 @@ import moment from 'moment';
 import FluxEntry from './FluxEntry';
 import CodeableConcept from '../shr/core/CodeableConcept';
 import CodeSystem from '../shr/core/CodeSystem';
+import Entry from '../shr/base/Entry';
+import EntryType from '../shr/base/EntryType';
+import LastUpdated from '../shr/base/LastUpdated';
 
 class FluxConditionPresentAssertion extends FluxEntry {
     constructor(json, type, patientRecord) {
         super();
         this._patientRecord = patientRecord;
         this._condition = this._entry = ConditionPresentAssertion.fromJSON(json);
+        if (!this._entry.entryInfo) {
+            let entry = new Entry();
+            entry.entryType = new EntryType();
+            entry.entryType.uri = 'http://standardhealthrecord.org/spec/shr/base/ConditionPresentAssertion';
+            let today = new moment().format("D MMM YYYY");
+            entry.lastUpdated = new LastUpdated();
+            entry.lastUpdated.instant = today;
+            this._entry.entryInfo = entry;
+        }
     }
 
     get entryInfo() {
@@ -62,7 +74,7 @@ class FluxConditionPresentAssertion extends FluxEntry {
     
     set codeSystem(newCodeSystem) {
         if (!this._condition.value) this._condition.value = new CodeableConcept();
-        if (!this._condition.value.coding[0]) this._condition.value.coding = [ new Coding() ];
+        if (!this._condition.value.coding) this._condition.value.coding = [ new Coding() ];
         this._condition.value.coding[0].codeSystem = new CodeSystem();
         this._condition.value.coding[0].codeSystem.value = newCodeSystem;
     }
