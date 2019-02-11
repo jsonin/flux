@@ -377,7 +377,6 @@ class ShortcutManager {
 
     getKeywordsForShortcut(shortcutId, context) {
         if (Lang.isUndefined(this.shortcuts[shortcutId]["keywords"])) { 
-            console.log("getKeyWordsForShortcut - no keywords on " + shortcutId);
             return [];
         } else if (!Lang.isUndefined(context)) {
             const currentContextId = context.getId();

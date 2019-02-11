@@ -88,6 +88,7 @@
     "ucum": "cmoesel/ucum.js#es5-friendly"
   },
   "scripts": {
+    "build-shortcut-service": "java -jar ../swagger-codegen/modules/swagger-codegen-cli/target/swagger-codegen-cli.jar generate -i ../shortcut-services/services_cozehealth_api.json -l javascript -o ../shortcut-services",
     "build-css": "node-sass-chokidar src/ -o src/",
     "watch-css": "npm run build-css && node-sass-chokidar src/ -o src/ --watch --recursive",
     "start-js": "react-scripts start",

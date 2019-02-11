@@ -146,7 +146,7 @@ class FluxNotesEditor extends React.Component {
         this.contextManager.subscribe(serviceSuggestionPortalSearchIndex, serviceSuggestionPortalSearchIndex.updateIndex)
         this.suggestionPortalSearchIndexes.push(serviceSuggestionPortalSearchIndex)
         this.suggestionsPluginServices = SuggestionsPlugin({
-            capture: /$([\w\s\-,]*)/,
+            capture: /\$([\w\s\-,]*)/,
             onEnter: this.choseSuggestedShortcut.bind(this),
             suggestions: serviceSuggestionPortalSearchIndex.search,
             trigger: '$',
@@ -1834,6 +1834,7 @@ class FluxNotesEditor extends React.Component {
     
     render = () => {
         const CreatorsPortal = this.suggestionsPluginCreators.SuggestionPortal;
+        const ServicesPortal = this.suggestionsPluginServices.SuggestionPortal;
         const InsertersPortal = this.suggestionsPluginInserters.SuggestionPortal;
         const PlaceholdersPortal = this.suggestionsPluginPlaceholders.SuggestionPortal;
         const disabledEditorClassName = this.props.isAppBlurred ? 'content-disabled' : '';
@@ -1903,6 +1904,13 @@ class FluxNotesEditor extends React.Component {
                         getPosition={this.getTextCursorPosition}
                         openedPortal={this.state.openedPortal}
                         portalId={"CreatorsPortal"}
+                        setOpenedPortal={this.setOpenedPortal}
+                        state={this.state.state}
+                    />
+                    <ServicesPortal
+                        getPosition={this.getTextCursorPosition}
+                        openedPortal={this.state.openedPortal}
+                        portalId={"ServicesPortal"}
                         setOpenedPortal={this.setOpenedPortal}
                         state={this.state.state}
                     />
