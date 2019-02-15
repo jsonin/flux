@@ -146,7 +146,7 @@ class FluxNotesEditor extends React.Component {
         this.contextManager.subscribe(serviceSuggestionPortalSearchIndex, serviceSuggestionPortalSearchIndex.updateIndex)
         this.suggestionPortalSearchIndexes.push(serviceSuggestionPortalSearchIndex)
         this.suggestionsPluginServices = SuggestionsPlugin({
-            capture: /\$([\w\s\-,]*)/,
+            capture: /\$([\w\s\-,]{3,})/,
             onEnter: this.choseSuggestedShortcut.bind(this),
             suggestions: serviceSuggestionPortalSearchIndex.search,
             trigger: '$',
