@@ -4,7 +4,24 @@ import _ from 'lodash';
 import ShortcutServicesClient from 'coze_healthflux_notes_autocomplete_api_example';
 
 const ApiClient = new ShortcutServicesClient.ApiClient();
+const api = new ShortcutServicesClient.DefaultApi(ApiClient);
 
+async function synchronousAPICaller(searchText) {
+    let result = await callDiagnosisOnAPI(api, searchText);
+    return result;
+}
+
+function callDiagnosisOnAPI(api, searchText) {
+    return new Promise((resolve, reject) => {
+        api.diagnosis(searchText, (error, data, response) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(data);
+            }
+        });
+    });
+}
 
 class SuggestionPortalShortcutServiceSearchIndex extends SuggestionPortalSearchIndex  {
     constructor(list, initialChar, shortcutManager) {
@@ -15,21 +32,21 @@ class SuggestionPortalShortcutServiceSearchIndex extends SuggestionPortalSearchI
     }
 
     search = (searchText) => {
-        console.log("SuggestionPortalShortcutServiceSearchIndex.search: find matches via calling service ", searchText);
+//        console.log("SuggestionPortalShortcutServiceSearchIndex.search: find matches via calling service ", searchText);
         if (Lang.isUndefined(searchText)) return [];
         //ApiClient.basePath = config.baseURL;
-        const api = new ShortcutServicesClient.DefaultApi(ApiClient);
-        console.log(api.diagnosis(searchText));
-        return [ {
-            key: "foo_key",
-            value: "foo_value",
-            suggestion: "foo",
-            data: {
-                // Use the bonus score to drag the most recent shortcuts to the top and weight the older ones to the bottom
-                score: 100,
-                matches: [],
-            },
-        } ];
+
+        return synchronousAPICaller(searchText).then((result) => {
+            // api.diagnosis(searchText, callback);
+            if (Lang.isUndefined(result)) return [];
+
+            return result.map((s) => {
+                return { key: s, value: s, suggestion: s, data: { score: 100, matches: []}};
+            });
+        }).catch((error) => {
+            console.log("error", error);
+            return [];
+        });
     }
 };
 
