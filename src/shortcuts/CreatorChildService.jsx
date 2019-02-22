@@ -10,7 +10,7 @@ export default class CreatorChildService extends Shortcut {
     }
 
     getPrefixCharacter() {
-        return "#";
+        return "$";
     }
 
     initialize(contextManager, trigger, updatePatient = true) {
@@ -26,7 +26,7 @@ export default class CreatorChildService extends Shortcut {
 
         super.determineParentContext(contextManager, this.metadata["knownParentContexts"], this.metadata["parentAttribute"]);
 
-        //console.log("set parent context to " + this.parentContext);
+        console.log("set parent context to ", this.parentContext);
         if (!Lang.isUndefined(this.parentContext)) {
             this.parentContext.addChild(this);
         }

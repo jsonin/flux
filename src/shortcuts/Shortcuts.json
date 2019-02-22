@@ -70,8 +70,8 @@
   { "type": "CreatorChildService",
     "id": "DiagnosisCode",
     "parentAttribute": "code",
-    "service": "http://localhost:8080/codes",
-    "arguments": [ {"name":"type", "value":"ICD10"}, {"name": "toMatch", "value":"$text"} ],
+    "service": "http://localhost:8080/api",
+    "valueSetType": "diagnosis",
     "knownParentContexts": "Diagnosis",
     "description":"Retrieves ICD10 codes that match partial string toMatch.",
     "shortcutGroupName": "Codes"

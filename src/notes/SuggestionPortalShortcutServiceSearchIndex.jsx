@@ -6,14 +6,9 @@ import ShortcutServicesClient from 'coze_healthflux_notes_autocomplete_api_examp
 const ApiClient = new ShortcutServicesClient.ApiClient();
 const api = new ShortcutServicesClient.DefaultApi(ApiClient);
 
-async function synchronousAPICaller(searchText) {
-    let result = await callDiagnosisOnAPI(api, searchText);
-    return result;
-}
-
-function callDiagnosisOnAPI(api, searchText) {
+function callValuesetOnAPI(api, valueSetType, searchText) { //valuesetname, searchText
     return new Promise((resolve, reject) => {
-        api.diagnosis(searchText, (error, data, response) => {
+        api.valueset(valueSetType, searchText, (error, data, response) => { //valuesetname, searchText
             if (error) {
                 reject(error);
             } else {
@@ -25,27 +20,47 @@ function callDiagnosisOnAPI(api, searchText) {
 
 class SuggestionPortalShortcutServiceSearchIndex extends SuggestionPortalSearchIndex  {
     constructor(list, initialChar, shortcutManager) {
-        super();
+        super(list, initialChar, shortcutManager)
+        this.currentlyValidServiceShortcuts = [];
+        this.targetShortcutMetadata = null;
     }
 
     updateIndex = (contextManager) => {
+        const serviceShortcuts = contextManager.getCurrentlyValidShortcuts(this.shortcutManager).filter((value) => {
+            return this.shortcutManager.getShortcutMetadata(value.id)["type"] === 'CreatorChildService';
+        });
+        if (Lang.isEqual(serviceShortcuts, this.currentlyValidServiceShortcuts)) return
+        this.currentlyValidServiceShortcuts = serviceShortcuts;
+
+        if (Lang.isEmpty(this.currentlyValidServiceShortcuts)) {
+            this.targetShortcutMetadata = null;
+            return [];
+        }
+
+        const shortcutId = this.currentlyValidServiceShortcuts[0].id;
+        this.targetShortcutMetadata = this.shortcutManager.getShortcutMetadata(shortcutId);
     }
 
     search = (searchText) => {
 //        console.log("SuggestionPortalShortcutServiceSearchIndex.search: find matches via calling service ", searchText);
         if (Lang.isUndefined(searchText)) return [];
-        //ApiClient.basePath = config.baseURL;
+        if (!this.targetShortcutMetadata) return [];
+        ApiClient.basePath = this.targetShortcutMetadata["service"];
 
-        return synchronousAPICaller(searchText).then((result) => {
-            // api.diagnosis(searchText, callback);
-            if (Lang.isUndefined(result)) return [];
+        // valueSetType
+        const valueSetType = this.targetShortcutMetadata["valueSetType"];
 
+        // call API
+        return callValuesetOnAPI(api, valueSetType, searchText).then((result) => {
             return result.map((s) => {
-                return { key: s, value: s, suggestion: s, data: { score: 100, matches: []}};
+                return { 
+                    key: s.code, 
+                    value: {name: s.label, description: s.code + " - " + s.label }, 
+                    suggestion: s.label, 
+                    data: { score: 100, matches: [ s.label ]},
+                    shortcut: this.targetShortcutMetadata
+                };
             });
-        }).catch((error) => {
-            console.log("error", error);
-            return [];
         });
     }
 };

@@ -1,6 +1,7 @@
 import CreatorBase from './CreatorBase';
 import CreatorIntermediary from './CreatorIntermediary';
 import CreatorChild from './CreatorChild';
+import CreatorChildService from './CreatorChildService';
 import InsertValue from './InsertValue';
 import UpdaterBase from './UpdaterBase';
 import SingleHashtagKeyword from './SingleHashtagKeyword';
@@ -167,6 +168,8 @@ class ShortcutManager {
             newShortcut = new SingleHashtagKeyword(onUpdate, metadata, patient, shortcutData);
         } else if (className === "NLPHashtag") {
             newShortcut = new NLPHashtag(onUpdate, metadata, patient, shortcutData);
+        } else if (className === "CreatorChildService") {
+            newShortcut = new CreatorChildService(onUpdate, metadata, patient, shortcutData);
         } else {
             console.error("unsupported type: " + className);
             return null;
