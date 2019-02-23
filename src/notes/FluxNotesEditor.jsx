@@ -285,11 +285,9 @@ class FluxNotesEditor extends React.Component {
     choseSuggestedShortcut(suggestion) {
         const {state} = this.state;
         const shortcutMetadata = suggestion.shortcut;
-        let shortcut;
-        if (shortcutMetadata) {
-            shortcut = this.props.newCurrentShortcut(shortcutMetadata, suggestion.value.name, undefined, true, "auto-complete");
-        } else {
-            shortcut = this.props.newCurrentShortcut(null, suggestion.value.name, undefined, true, "auto-complete");
+        const shortcut = this.props.newCurrentShortcut(shortcutMetadata ? shortcutMetadata : null, suggestion.value.name, undefined, true, "auto-complete");
+        if (suggestion.value.code) {
+            shortcut.setValue(suggestion.value);
         }
         if (!Lang.isNull(shortcut) && shortcut.needToSelectValueFromMultipleOptions()) {
             return this.openPortalToSelectValueForShortcut(shortcut, true, state.transform()).apply();

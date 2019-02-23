@@ -2,6 +2,7 @@
 import ConditionPresentAssertion from '../shr/base/ConditionPresentAssertion';
 import FluxCancerProgression from '../oncocore/FluxCancerProgression';
 import Coding from '../shr/core/Coding';
+import DisplayText from '../shr/core/DisplayText';
 import FluxMedicationRequested from '../medication/FluxMedicationRequested';
 import FluxToxicAdverseDrugReaction from '../adverse/FluxToxicAdverseDrugReaction';
 import FluxObservation from '../base/FluxObservation';
@@ -61,6 +62,17 @@ class FluxConditionPresentAssertion extends FluxEntry {
         return this._condition.findingTopicCode.value.coding[0].code.value;
     }
 
+    set codeObject(codeObject) {
+        if (!codeObject) {
+            this._condition.value = null;
+            return;
+        }
+        this.code = codeObject.code;
+        this.codeSystem = codeObject.codeSystem;
+        if (!this._condition.value.coding[0].displayText) this._condition.value.coding[0].displayText = new DisplayText();
+        this._condition.value.coding[0].displayText.value = codeObject.label;
+    }
+
     set code(newCode) {
         if (!this._condition.value) this._condition.value = new CodeableConcept();
         if (!this._condition.value.coding) this._condition.value.coding = [ new Coding() ];
@@ -75,7 +87,7 @@ class FluxConditionPresentAssertion extends FluxEntry {
     set codeSystem(newCodeSystem) {
         if (!this._condition.value) this._condition.value = new CodeableConcept();
         if (!this._condition.value.coding) this._condition.value.coding = [ new Coding() ];
-        this._condition.value.coding[0].codeSystem = new CodeSystem();
+        if (!this._condition.value.coding[0].codeSystem) this._condition.value.coding[0].codeSystem = new CodeSystem();
         this._condition.value.coding[0].codeSystem.value = newCodeSystem;
     }
 

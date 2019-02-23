@@ -55,7 +55,7 @@ class SuggestionPortalShortcutServiceSearchIndex extends SuggestionPortalSearchI
             return result.map((s) => {
                 return { 
                     key: s.code, 
-                    value: {name: s.label, description: s.code + " - " + s.label }, 
+                    value: {name: s.label, description: s.code + " - " + s.label, code: s.code, label: s.label, codeSystem: s.codesystem }, 
                     suggestion: s.label, 
                     data: { score: 100, matches: [ s.label ]},
                     shortcut: this.targetShortcutMetadata

@@ -15,14 +15,6 @@ export default class CreatorChildService extends Shortcut {
 
     initialize(contextManager, trigger, updatePatient = true) {
         super.initialize(contextManager, trigger, updatePatient);
-        let text = this.determineText(contextManager);
-        if (!Lang.isUndefined(text)) {
-            if (Lang.isArray(text) || text === 'date-id') {
-                this.flagForTextSelection(text);
-            } else {
-                this.setText(text);
-            }
-        }
 
         super.determineParentContext(contextManager, this.metadata["knownParentContexts"], this.metadata["parentAttribute"]);
 
@@ -53,48 +45,19 @@ export default class CreatorChildService extends Shortcut {
         return result;
     }
 
-    // This returns a placeholder object to trigger opening the Context Portal.
-    // return 'date-id' opens calendar.
-    determineText(contextManager) {
-        if (!Lang.isObject(this.metadata.picker)) {
-            return this.metadata.picker;
-        } else if (Lang.isArray(this.metadata.picker)) {
-            return this.metadata.picker;
-        } else {
-            return this.getValueSet(this.metadata.picker).map((item) => {
-                return {"key": item.id, "context": item.name, "object": item};
-            });
-        }
-    }
-
-    getValueSet(spec) {
-        let args = spec["args"];
-        let category = spec["category"];
-        let valueSet = spec["valueSet"];
-        if (args) {
-            //console.log(category + "/" + valueSet + " with " + args);
-            return ValueSetManager.getValueList(category, valueSet, ...args);
-        } else {
-            //console.log(category + "/" + valueSet);
-            return ValueSetManager.getValueList(category, valueSet);
-        }
-    }
-
     setText(text, updatePatient = true) {
         const prefix = this.getPrefixCharacter();
         if (text.startsWith(prefix)) {
             text = text.substring(prefix.length);
         }
         this.text = text;
-        // console.log("CreatorChild.setText: " + this.metadata.picker);
-        // console.log("Metadata ")
-        // console.log(this.metadata);
-        let value = text;
-        if (this.metadata.picker === 'date-id') {
-            value = moment(text, 'MM-DD-YYYY').format('D MMM YYYY');
-        }
         if (!Lang.isUndefined(this.parentContext)) {
-            // console.log("set " + this.metadata.parentAttribute + " to " + value);
+            this.parentContext.setAttributeValue(this.metadata.parentAttribute, text, false, updatePatient);
+        }
+    }
+
+    setValue(value, updatePatient = true) {
+        if (!Lang.isUndefined(this.parentContext)) {
             this.parentContext.setAttributeValue(this.metadata.parentAttribute, value, false, updatePatient);
         }
     }
@@ -110,8 +73,6 @@ export default class CreatorChildService extends Shortcut {
 
     getShortcutType() {
         return this.metadata["id"];
-        //throw new Error("getShortcutType on CreatorChild called.");
-        //return "#" + this.metadata.stringTriggers[0].name;
     }
 
     validateInCurrentContext(contextManager) {
@@ -121,8 +82,6 @@ export default class CreatorChildService extends Shortcut {
 
     static getStringTriggers() {
         throw new Error("getStringTriggers on CreatorChild called.");
-        // if it's a function, we need to call it
-        //return this.metadata.stringTriggers;
     }
 
     static getTriggerRegExp() {

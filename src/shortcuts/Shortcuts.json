@@ -51,7 +51,7 @@
     "name": "diagnosis of",
     "getData": null,
     "valueObject": "http://standardhealthrecord.org/spec/shr/base/ConditionPresentAssertion",
-    "valueObjectAttributes": [  {"name":"code", "attribute":"value", "isSettable":"true", "setMethod":"code", "childShortcut": "DiagnosisCode"}
+    "valueObjectAttributes": [  {"name":"code", "attribute":"value", "isSettable":"true", "setMethod":"codeObject", "childShortcut": "DiagnosisCode"}
     ],
     "updatePatient": [{"object":"patient", "method": "addCondition", "args": [ "$valueObject", "$clinicalNote" ]}],
     "isContext": true,
