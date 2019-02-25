@@ -16,20 +16,26 @@ import CodeSystem from '../shr/core/CodeSystem';
 import Entry from '../shr/base/Entry';
 import EntryType from '../shr/base/EntryType';
 import LastUpdated from '../shr/base/LastUpdated';
+import ClinicalStatus from '../shr/base/ClinicalStatus';
+import Onset from '../shr/base/Onset';
 
 class FluxConditionPresentAssertion extends FluxEntry {
     constructor(json, type, patientRecord) {
         super();
         this._patientRecord = patientRecord;
         this._condition = this._entry = ConditionPresentAssertion.fromJSON(json);
+        const today = new moment().format("D MMM YYYY");
         if (!this._entry.entryInfo) {
             let entry = new Entry();
             entry.entryType = new EntryType();
             entry.entryType.uri = 'http://standardhealthrecord.org/spec/shr/base/ConditionPresentAssertion';
-            let today = new moment().format("D MMM YYYY");
             entry.lastUpdated = new LastUpdated();
             entry.lastUpdated.instant = today;
             this._entry.entryInfo = entry;
+        }
+        if (Lang.isEmpty(json)) {
+            this.clinicalStatus = 'active';
+            this.diagnosisDate = today;
         }
     }
 
@@ -42,6 +48,11 @@ class FluxConditionPresentAssertion extends FluxEntry {
             return this._condition.onset.value;
         }
         return null;
+    }
+
+    set diagnosisDate(newDate) {
+        if (!this._condition.onset) this._condition.onset = new Onset();
+        this._condition.onset.value = newDate;
     }
 
     getPotentialDiagnosisDates() {
@@ -121,6 +132,11 @@ class FluxConditionPresentAssertion extends FluxEntry {
     
     get clinicalStatus() {
         return this._condition.clinicalStatus && this._condition.clinicalStatus.value ? this._displayTextOrCode(this._condition.clinicalStatus.value.coding[0]) : null;
+    }
+
+    set clinicalStatus(newStatus) {
+        if (!this._condition.clinicalStatus) this._condition.clinicalStatus = new ClinicalStatus();
+        this._condition.clinicalStatus.value = newStatus;
     }
     
     get laterality() {
