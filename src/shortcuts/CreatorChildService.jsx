@@ -1,6 +1,4 @@
 import Shortcut from './Shortcut';
-import ValueSetManager from '../lib/ValueSetManager';
-import moment from 'moment';
 import Lang from 'lodash';
 
 export default class CreatorChildService extends Shortcut {
