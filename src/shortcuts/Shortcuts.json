@@ -70,7 +70,7 @@
   { "type": "CreatorChildService",
     "id": "DiagnosisCode",
     "parentAttribute": "code",
-    "service": "http://localhost:8080/api",
+    "service": "https://services.cozehealth.net/api",
     "valueSetType": "diagnosis",
     "knownParentContexts": "Diagnosis",
     "description":"Retrieves ICD10 codes that match partial string toMatch.",

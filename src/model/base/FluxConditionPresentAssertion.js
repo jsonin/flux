@@ -131,7 +131,9 @@ class FluxConditionPresentAssertion extends FluxEntry {
     }
     
     get clinicalStatus() {
-        return this._condition.clinicalStatus && this._condition.clinicalStatus.value ? this._displayTextOrCode(this._condition.clinicalStatus.value.coding[0]) : null;
+        return this._condition.clinicalStatus && this._condition.clinicalStatus.value && this._condition.clinicalStatus.value.coding ? 
+            this._displayTextOrCode(this._condition.clinicalStatus.value.coding[0]) : 
+            null;
     }
 
     set clinicalStatus(newStatus) {
