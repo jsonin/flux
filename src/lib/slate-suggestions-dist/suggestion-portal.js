@@ -180,14 +180,14 @@ class SuggestionPortal extends React.Component {
                 newText = newText.slice(0, newText.length - 1);
                 offset -= 1;
             }
-        } else { 
+        } else if (nextChar) {
             // Else, add the processed character
             newText += nextChar;
         }
 
         // Get the current word after processing the new data
         const currentWord = getCurrentWord(newText, offset, trigger);
-        const text = this.getMatchText(currentWord, capture)
+        const text = this.getMatchText(currentWord, capture);
 
         if (typeof suggestions === 'function') {
             const newSuggestions = suggestions(text);

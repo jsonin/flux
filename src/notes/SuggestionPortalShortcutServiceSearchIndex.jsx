@@ -42,7 +42,6 @@ class SuggestionPortalShortcutServiceSearchIndex extends SuggestionPortalSearchI
     }
 
     search = (searchText) => {
-//        console.log("SuggestionPortalShortcutServiceSearchIndex.search: find matches via calling service ", searchText);
         if (Lang.isUndefined(searchText)) return [];
         if (!this.targetShortcutMetadata) return [];
         ApiClient.basePath = this.targetShortcutMetadata["service"];

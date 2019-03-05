@@ -55,6 +55,7 @@ export default class CreatorChildService extends Shortcut {
     }
 
     setValue(value, updatePatient = true) {
+        console.log(value, this.parentContext, this.metadata.parentAttribute);
         if (!Lang.isUndefined(this.parentContext)) {
             this.parentContext.setAttributeValue(this.metadata.parentAttribute, value, false, updatePatient);
         }

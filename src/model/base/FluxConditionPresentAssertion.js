@@ -1,8 +1,10 @@
 //import BodySite from '../shr/entity/BodySite';
 import ConditionPresentAssertion from '../shr/base/ConditionPresentAssertion';
 import FluxCancerProgression from '../oncocore/FluxCancerProgression';
+import Code from '../shr/core/Code';
 import Coding from '../shr/core/Coding';
 import DisplayText from '../shr/core/DisplayText';
+import FindingTopicCode from '../shr/base/FindingTopicCode';
 import FluxMedicationRequested from '../medication/FluxMedicationRequested';
 import FluxToxicAdverseDrugReaction from '../adverse/FluxToxicAdverseDrugReaction';
 import FluxObservation from '../base/FluxObservation';
@@ -80,26 +82,29 @@ class FluxConditionPresentAssertion extends FluxEntry {
         }
         this.code = codeObject.code;
         this.codeSystem = codeObject.codeSystem;
-        if (!this._condition.value.coding[0].displayText) this._condition.value.coding[0].displayText = new DisplayText();
-        this._condition.value.coding[0].displayText.value = codeObject.label;
+        if (!this._condition.findingTopicCode.value.coding[0].displayText) this._condition.findingTopicCode.value.coding[0].displayText = new DisplayText();
+        this._condition.findingTopicCode.value.coding[0].displayText.value = codeObject.label;
     }
 
     set code(newCode) {
-        if (!this._condition.value) this._condition.value = new CodeableConcept();
-        if (!this._condition.value.coding) this._condition.value.coding = [ new Coding() ];
-        this._condition.value.coding[0].code = newCode;
+        if (!this._condition.findingTopicCode) this._condition.findingTopicCode = new FindingTopicCode();
+        if (!this._condition.findingTopicCode.value) this._condition.findingTopicCode.value = new CodeableConcept();
+        if (!this._condition.findingTopicCode.value.coding) this._condition.findingTopicCode.value.coding = [ new Coding() ];
+        if (!this._condition.findingTopicCode.value.coding[0].code) this._condition.findingTopicCode.value.coding[0].code = new Code();
+        this._condition.findingTopicCode.value.coding[0].code.value = newCode;
     }
 
     get codeSystem() {
         if (!this._condition.findingTopicCode || !this._condition.findingTopicCode.value) return null;
         return this._condition.findingTopicCode.value.coding[0].codeSystem.value;
     }
-    
+
     set codeSystem(newCodeSystem) {
-        if (!this._condition.value) this._condition.value = new CodeableConcept();
-        if (!this._condition.value.coding) this._condition.value.coding = [ new Coding() ];
-        if (!this._condition.value.coding[0].codeSystem) this._condition.value.coding[0].codeSystem = new CodeSystem();
-        this._condition.value.coding[0].codeSystem.value = newCodeSystem;
+        if (!this._condition.findingTopicCode) this._condition.findingTopicCode = new FindingTopicCode();
+        if (!this._condition.findingTopicCode.value) this._condition.findingTopicCode.value = new CodeableConcept();
+        if (!this._condition.findingTopicCode.value.coding) this._condition.findingTopicCode.value.coding = [ new Coding() ];
+        if (!this._condition.findingTopicCode.value.coding[0].codeSystem) this._condition.findingTopicCode.value.coding[0].codeSystem = new CodeSystem();
+        this._condition.findingTopicCode.value.coding[0].codeSystem.value = newCodeSystem;
     }
 
     get codeURL() {
