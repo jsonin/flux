@@ -143,7 +143,12 @@ class FluxConditionPresentAssertion extends FluxEntry {
 
     set clinicalStatus(newStatus) {
         if (!this._condition.clinicalStatus) this._condition.clinicalStatus = new ClinicalStatus();
-        this._condition.clinicalStatus.value = newStatus;
+        if (!this._condition.clinicalStatus.value) this._condition.clinicalStatus.value = new CodeableConcept();
+        if (!this._condition.clinicalStatus.value.coding) this._condition.clinicalStatus.value.coding = [ new Coding() ];
+        if (!this._condition.clinicalStatus.value.coding[0].displayText) this._condition.clinicalStatus.value.coding[0].displayText = new DisplayText();
+        if (!this._condition.clinicalStatus.value.coding[0].code) this._condition.clinicalStatus.value.coding[0].code = new Code();
+        this._condition.clinicalStatus.value.coding[0].code.value = newStatus;
+        this._condition.clinicalStatus.value.coding[0].displayText.value = newStatus;
     }
     
     get laterality() {

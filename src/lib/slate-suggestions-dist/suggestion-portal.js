@@ -61,6 +61,7 @@ class SuggestionPortal extends React.Component {
 
     // Use filtered suggestions and index to pass a suggestion up to plugin
     setCallbackSuggestion = (filteredSuggestions, selectedIndex=0) => {
+        if (!filteredSuggestions) return;
         if (filteredSuggestions.length) {
             this.props.callback.suggestion = filteredSuggestions[selectedIndex]
         } else {

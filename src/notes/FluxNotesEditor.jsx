@@ -6,7 +6,6 @@ import FontAwesome from 'react-fontawesome';
 import ContextPortal from '../context/ContextPortal';
 import SuggestionPortalShortcutSearchIndex from './SuggestionPortalShortcutSearchIndex';
 import SuggestionPortalPlaceholderSearchIndex from './SuggestionPortalPlaceholderSearchIndex';
-import SuggestionPortalShortcutServiceSearchIndex from './SuggestionPortalShortcutServiceSearchIndex';
 // versions 0.20.3-0.20.7 of Slate seem to have an issue.
 // when we change the selection and give focus in our key handlers, Slate changes the selection including
 // focus and then immediately takes focus away. Not an issue in 0.20.2 and older. package.json currently
@@ -136,22 +135,10 @@ class FluxNotesEditor extends React.Component {
         this.suggestionsPluginCreators = SuggestionsPlugin({
             capture: /#([\w\s\-,]*)/,
             onEnter: this.choseSuggestedShortcut.bind(this),
-            suggestions: creatorSuggestionPortalSearchIndex.search,
+            suggestions: creatorSuggestionPortalSearchIndex.search.bind(creatorSuggestionPortalSearchIndex),
             trigger: '#',
         });
         this.plugins.push(this.suggestionsPluginCreators)
-
-        // setup service-based suggestions plugin (autocomplete)
-        const serviceSuggestionPortalSearchIndex = new SuggestionPortalShortcutServiceSearchIndex([], '$', this.props.shortcutManager);
-        this.contextManager.subscribe(serviceSuggestionPortalSearchIndex, serviceSuggestionPortalSearchIndex.updateIndex)
-        this.suggestionPortalSearchIndexes.push(serviceSuggestionPortalSearchIndex)
-        this.suggestionsPluginServices = SuggestionsPlugin({
-            capture: /\$([\w\s\-,]{3,})/,
-            onEnter: this.choseSuggestedShortcut.bind(this),
-            suggestions: serviceSuggestionPortalSearchIndex.search,
-            trigger: '$',
-        });
-        this.plugins.push(this.suggestionsPluginServices)
 
         // setup inserter suggestions plugin (autocomplete)
         const inserterSuggestionPortalSearchIndex = new SuggestionPortalShortcutSearchIndex([], '@', this.props.shortcutManager);
@@ -160,19 +147,19 @@ class FluxNotesEditor extends React.Component {
         this.suggestionsPluginInserters = SuggestionsPlugin({
             capture: /@([\w\s\-,]*)/,
             onEnter: this.choseSuggestedShortcut.bind(this),
-            suggestions: inserterSuggestionPortalSearchIndex.search,
+            suggestions: inserterSuggestionPortalSearchIndex.search.bind(inserterSuggestionPortalSearchIndex),
             trigger: '@',
         });
         this.plugins.push(this.suggestionsPluginInserters)
 
-        // Setup suggestions plugin
+        // Setup placeholder suggestions plugin
         const placeholderSuggestionPortalSearchIndex = new SuggestionPortalPlaceholderSearchIndex([], '<', this.props.shortcutManager);        
         this.contextManager.subscribe(placeholderSuggestionPortalSearchIndex, placeholderSuggestionPortalSearchIndex.updateIndex)
         this.suggestionPortalSearchIndexes.push(placeholderSuggestionPortalSearchIndex)
         this.suggestionsPluginPlaceholders = SuggestionsPlugin({
             capture: /<([\w\s\-,>]*)/,
             onEnter: this.choseSuggestedPlaceholder.bind(this),
-            suggestions: placeholderSuggestionPortalSearchIndex.search,
+            suggestions: placeholderSuggestionPortalSearchIndex.search.bind(placeholderSuggestionPortalSearchIndex),
             trigger: '<',
         });
         this.plugins.push(this.suggestionsPluginPlaceholders);
@@ -1838,7 +1825,7 @@ class FluxNotesEditor extends React.Component {
     
     render = () => {
         const CreatorsPortal = this.suggestionsPluginCreators.SuggestionPortal;
-        const ServicesPortal = this.suggestionsPluginServices.SuggestionPortal;
+        //const ServicesPortal = this.suggestionsPluginServices.SuggestionPortal;
         const InsertersPortal = this.suggestionsPluginInserters.SuggestionPortal;
         const PlaceholdersPortal = this.suggestionsPluginPlaceholders.SuggestionPortal;
         const disabledEditorClassName = this.props.isAppBlurred ? 'content-disabled' : '';
@@ -1911,13 +1898,13 @@ class FluxNotesEditor extends React.Component {
                         setOpenedPortal={this.setOpenedPortal}
                         state={this.state.state}
                     />
-                    <ServicesPortal
+                    {/* <ServicesPortal
                         getPosition={this.getTextCursorPosition}
                         openedPortal={this.state.openedPortal}
                         portalId={"ServicesPortal"}
                         setOpenedPortal={this.setOpenedPortal}
                         state={this.state.state}
-                    />
+                    /> */}
                     <InsertersPortal
                         getPosition={this.getTextCursorPosition}
                         openedPortal={this.state.openedPortal}
