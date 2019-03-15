@@ -51,9 +51,8 @@ function SingleHashtagKeywordStructuredFieldPlugin(opts) {
 
                     // Sort keywords based on length -- we want to match longest options first
                     keywords.sort(_sortKeywordByNameLength);
-                    const keywordInClosestBlock = scanTextForKeywordObject(curNode, keywords); //curNode.text
+                    const keywordInClosestBlock = scanTextForKeywordObject(curNode, keywords);
                     if (!Lang.isUndefined(keywordInClosestBlock)) {
-                        console.log("*** found", keywordInClosestBlock);
                         const keywordText = keywordInClosestBlock.name.toLowerCase();
                         const newKeywordShortcut = createShortcut(null, keywordText);
                         newKeywordShortcut.setSource("Keyword");
@@ -62,7 +61,9 @@ function SingleHashtagKeywordStructuredFieldPlugin(opts) {
                         let keywordRange;
                         if (curNode.nodes) {
                             for (const childNode of curNode.nodes) {
-                                keywordRange = getRangeForKeyword(childNode, keywordText);
+                                if(childNode.type !== 'structured_field') {
+                                    keywordRange = getRangeForKeyword(childNode, keywordText);
+                                }
                                 if (keywordRange) break;
                             }
                         } else {
@@ -115,7 +116,6 @@ function SingleHashtagKeywordStructuredFieldPlugin(opts) {
 
     // Given block-node's text & keywordObjects asso. w/ a SingleHashtagKeywordShortcut , return first keyword found in that text (if any)
     function scanTextForKeywordObject(curNode, keywordObjects) {
-        console.log(curNode, keywordObjects);
         let curNodeText = [];
         if(curNode.nodes){
             for(const childNode of curNode.nodes){
