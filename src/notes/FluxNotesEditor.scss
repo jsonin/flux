@@ -200,6 +200,7 @@
     background-color: rgb(255, 255, 255);
     z-index: 1111;
     max-height: 212px; /* 6 list elements at 32px each, plus 10px of margin on top and bottom */
+    overflow-x: auto;
     overflow-y: auto;
 
     ul {
@@ -217,7 +218,7 @@
     li { 
         padding: 5px 10px;
         min-width: 75px;
-        max-width: 300px
+        //max-width: 300px
     }
 
     li.selected {

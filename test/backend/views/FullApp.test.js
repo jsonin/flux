@@ -725,7 +725,7 @@ describe('6 FluxNotesEditor', function() {
         expect(editorContent.text()).to.contain("");
     });    
     
-    it('6.5 captures staging data using singleKeywordHashtag method', () => {
+    it.only('6.5 captures staging data using singleKeywordHashtag method', () => {
         // Set up Managers that are needed by FluxNotesEditor
         let patient = new PatientRecord(mcodePatientJson);
         const contextManager = new ContextManager(patient, () => {});

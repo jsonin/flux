@@ -77,6 +77,36 @@
     "shortcutGroupName": "Codes"
   },
   { "type": "SingleHashtagKeyword",
+    "id": "Prescribe",
+    "name": "prescribe",
+    "getData": null,
+    "valueObject": "http://standardhealthrecord.org/spec/shr/medication/MedicationRequested",
+    "valueObjectAttributes": [  {"name":"code", "attribute":"value", "isSettable":"true", "setMethod":"codeObject", "childShortcut": "MedicationCode"}
+    ],
+    "updatePatient": [{"object":"patient", "method": "addMedication", "args": [ "$valueObject", "$parentValueObject", "$clinicalNote" ]}],
+    "isContext": true,
+    "stringTriggers": [{ "name": "#prescribe", "description": "Prescribe a medication for treatment of current condition, it symptoms, or of side effects of its treatment."}],
+    "regexpTrigger": null,
+    "form": null,
+    "formSpec": {   "title": "Prescribe",
+        "attributes": [ {   "title":"RxNorm", "name":"code", "type":"radioButtons", "values": {"category":"medication", "valueSet":"code", "args":"rxnorm"} }
+                      ]
+    },
+    "structuredPhrase": "#prescribe ${code}",
+    "knownParentContexts": "ConditionInserter",
+    "description": "Prescribe a medication for treatment of current condition, it symptoms, or of side effects of its treatment.",
+    "structuredPhraseDocumentation": "prescribeSheet.pdf"
+  },
+  { "type": "CreatorChildService",
+    "id": "MedicationCode",
+    "parentAttribute": "code",
+    "service": "https://services.cozehealth.net/api",
+    "valueSetType": "medication",
+    "knownParentContexts": "Prescribe",
+    "description":"Retrieves RxNorm medication codes that match partial string toMatch.",
+    "shortcutGroupName": "Codes"
+  },
+  { "type": "SingleHashtagKeyword",
     "id": "StagingCreator",
     "name": "staging",
     "getData": null,

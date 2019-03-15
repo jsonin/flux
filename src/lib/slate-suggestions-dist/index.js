@@ -6,10 +6,11 @@ import {
     ENTER_KEY
 } from './constants'
 
-function matchTrigger(state, trigger) {
-    const currentNode = state.blocks.first()
+function matchTrigger(state, ch, trigger) {
+    const currentNode = state.blocks.first();
+    const text = currentNode.text + ch;
 
-    return state.isFocused && trigger.test(currentNode.text)
+    return state.isFocused && trigger.test(text);
 }
 
 function SuggestionsPlugin(opts) {
@@ -20,7 +21,7 @@ function SuggestionsPlugin(opts) {
         const keyCode = e.keyCode
         callback.editor = editor
 
-        if (matchTrigger(state, capture)) {
+        if (matchTrigger(state, callback.convertSlateDataObjectToCharacter(data), capture)) {
             // Prevent default up and down arrow key press when portal is open
             if ((keyCode === UP_ARROW_KEY || keyCode === DOWN_ARROW_KEY)) {
                 e.preventDefault()

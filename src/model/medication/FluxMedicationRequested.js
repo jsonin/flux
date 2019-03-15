@@ -12,6 +12,11 @@ import Type from '../shr/core/Type';
 import FluxEntry from '../base/FluxEntry';
 import moment from 'moment';
 import lookup from '../../lib/MedicationInformationService.jsx';
+import CodeableConcept from '../shr/core/CodeableConcept';
+import CodeSystem from '../shr/core/CodeSystem';
+import Code from '../shr/core/Code';
+import Coding from '../shr/core/Coding';
+import DisplayText from '../shr/core/DisplayText';
 
 class FluxMedicationRequested extends FluxEntry {
     constructor(json) {
@@ -148,6 +153,24 @@ class FluxMedicationRequested extends FluxEntry {
         type.value = lookup.getCodeableConceptFromName(medicationName);
         medication.type = type;
         this._medicationRequested.medication = medication;
+    }
+
+    set codeObject(codeObject) {
+        if (!codeObject) {
+            this._medicationRequested.medication = null;
+            return;
+        }
+        this._medicationRequested.medication = new Medication();
+        this._medicationRequested.medication.type = new Type();
+        this._medicationRequested.medication.type.value = new CodeableConcept();
+        this._medicationRequested.medication.type.value.coding = [ new Coding() ];
+        this._medicationRequested.medication.type.value.coding[0].code = new Code();
+        this._medicationRequested.medication.type.value.coding[0].codeSystem = new CodeSystem();
+        this._medicationRequested.medication.type.value.coding[0].displayText = new DisplayText();
+
+        this._medicationRequested.medication.type.value.coding[0].code.value = codeObject.code;
+        this._medicationRequested.medication.type.value.coding[0].codeSystem.value = codeObject.codeSystem;
+        this._medicationRequested.medication.type.value.coding[0].displayText.value = codeObject.label;
     }
 
     /*

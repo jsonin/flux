@@ -35,14 +35,14 @@ function SingleHashtagKeywordStructuredFieldPlugin(opts) {
         const relevantSingleHashtagKeywordMappings = getRelevantSingleHashtagKeywordMappings(listOfSingleHashtagKeywordShortcutMappings, state, curKey);
         if (relevantSingleHashtagKeywordMappings.length !== 0) {
             // Get all relevant keywordShortcuts, 
-            const listOfKeywordShortcutClasses = findRelevantKeywordShortcutClasses(listOfSingleHashtagKeywordShortcutMappings).reduce((accumulator, listOfKeywordsForShortcut) => accumulator.concat(listOfKeywordsForShortcut));
+            const listOfKeywordShortcutClasses = findRelevantKeywordShortcutClasses(relevantSingleHashtagKeywordMappings).reduce((accumulator, listOfKeywordsForShortcut) => accumulator.concat(listOfKeywordsForShortcut));
             for (const keywordClass of listOfKeywordShortcutClasses) {
                 // Scan text to find any necessary replacements 
                 let keywords = getKeywordsBasedOnShortcutClass(keywordClass);
                 if (keywords.length > 0) {
                     const prefix = shortcutManager.getShortcutPrefix(keywordClass);
 
-                    // Copy keywords and add prefix to so that instances of keywords with prefixes are also replaced
+                    // Copy keywords and add prefix too so that instances of keywords with prefixes are also replaced
                     const keywordsWithPrefix = Lang.cloneDeep(keywords);
                     keywordsWithPrefix.forEach(keywordWithPrefix => {
                         if (prefix) keywordWithPrefix.name = `${prefix}${keywordWithPrefix.name}`;
@@ -51,9 +51,10 @@ function SingleHashtagKeywordStructuredFieldPlugin(opts) {
 
                     // Sort keywords based on length -- we want to match longest options first
                     keywords.sort(_sortKeywordByNameLength);
-                    const keywordInClosetBlock = scanTextForKeywordObject(curNode.text, keywords)
-                    if (!Lang.isUndefined(keywordInClosetBlock)) {
-                        const keywordText = keywordInClosetBlock.name.toLowerCase();
+                    const keywordInClosestBlock = scanTextForKeywordObject(curNode, keywords); //curNode.text
+                    if (!Lang.isUndefined(keywordInClosestBlock)) {
+                        console.log("*** found", keywordInClosestBlock);
+                        const keywordText = keywordInClosestBlock.name.toLowerCase();
                         const newKeywordShortcut = createShortcut(null, keywordText);
                         newKeywordShortcut.setSource("Keyword");
 
@@ -114,6 +115,7 @@ function SingleHashtagKeywordStructuredFieldPlugin(opts) {
 
     // Given block-node's text & keywordObjects asso. w/ a SingleHashtagKeywordShortcut , return first keyword found in that text (if any)
     function scanTextForKeywordObject(curNode, keywordObjects) {
+        console.log(curNode, keywordObjects);
         let curNodeText = [];
         if(curNode.nodes){
             for(const childNode of curNode.nodes){

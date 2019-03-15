@@ -35,6 +35,7 @@ class SuggestionPortal extends React.Component {
         props.callback.onEnter = props.onEnter
         props.callback.closePortal = this.closePortal
         props.callback.readOnly = false
+        props.callback.convertSlateDataObjectToCharacter = this.convertSlateDataObjectToCharacter;
 
         // Storing selected index in state b/c updates should trigger a re-render
         this.state = {
