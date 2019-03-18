@@ -76,8 +76,9 @@ class FluxConditionPresentAssertion extends FluxEntry {
     }
 
     set codeObject(codeObject) {
+        console.log(codeObject);
         if (!codeObject) {
-            this._condition.value = null;
+            this._condition.findingTopicCode = null;
             return;
         }
         this.code = codeObject.code;

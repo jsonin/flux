@@ -1,6 +1,22 @@
 import Shortcut from './Shortcut';
 import Lang from 'lodash';
+import ShortcutServicesClient from 'coze_healthflux_notes_autocomplete_api_example';
 
+const ApiClient = new ShortcutServicesClient.ApiClient();
+const api = new ShortcutServicesClient.DefaultApi(ApiClient);
+
+export function callValuesetOnAPI(serviceBaseUrl, valueSetType, searchText) { //valuesetname, searchText
+    ApiClient.basePath = serviceBaseUrl;
+    return new Promise((resolve, reject) => {
+        api.valueset(valueSetType, searchText, (error, data, response) => { //valuesetname, searchText
+            if (error) {
+                reject(error);
+            } else {
+                resolve(data);
+            }
+        });
+    });
+}
 export default class CreatorChildService extends Shortcut {
     constructor(onUpdate, metadata) {
         super();
@@ -44,12 +60,15 @@ export default class CreatorChildService extends Shortcut {
     }
 
     setText(text, updatePatient = true) {
+        console.log("setText", text);
         const prefix = this.getPrefixCharacter();
         if (text.startsWith(prefix)) {
             text = text.substring(prefix.length);
         }
         this.text = text;
+        console.log(this.parentContext);
         if (!Lang.isUndefined(this.parentContext)) {
+            console.log(this.parentContext, this.metadata.parentAttribute, text);
             this.parentContext.setAttributeValue(this.metadata.parentAttribute, text, false, updatePatient);
         }
     }

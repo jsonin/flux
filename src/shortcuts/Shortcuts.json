@@ -81,9 +81,16 @@
     "name": "prescribe",
     "getData": null,
     "valueObject": "http://standardhealthrecord.org/spec/shr/medication/MedicationRequested",
-    "valueObjectAttributes": [  {"name":"code", "attribute":"value", "isSettable":"true", "setMethod":"codeObject", "childShortcut": "MedicationCode"}
+    "valueObjectAttributes": [
+        {"name":"code", "attribute":"value", "isSettable":"true", "setMethod":"codeObject", "childShortcut": "MedicationCode"},
+        {"name":"starting", "childShortcut": "PrescribeStarting"},
+        {"name":"startingDate", "attribute":"startDate", "isSettable":"true", "setMethod": "startDate", "default": "$today"}
     ],
-    "updatePatient": [{"object":"patient", "method": "addMedication", "args": [ "$valueObject", "$parentValueObject", "$clinicalNote" ]}],
+    "updatePatient": [
+        {"object":"$valueObject", "attribute": "prescribedBy", "args": [ "$user"] },
+        {"object":"$valueObject", "method": "addReason", "args": [ "$parentValueObject"] },
+        {"object":"patient", "method": "addMedication", "args": [ "$valueObject", "$parentValueObject", "$clinicalNote" ]}
+    ],
     "isContext": true,
     "stringTriggers": [{ "name": "#prescribe", "description": "Prescribe a medication for treatment of current condition, it symptoms, or of side effects of its treatment."}],
     "regexpTrigger": null,
@@ -105,6 +112,17 @@
     "knownParentContexts": "Prescribe",
     "description":"Retrieves RxNorm medication codes that match partial string toMatch.",
     "shortcutGroupName": "Codes"
+  },
+  { "type": "CreatorIntermediary",
+    "id": "PrescribeStarting",
+    "name": "starting",
+    "valueObjectAttributes": [  {"name":"date", "toParentAttribute":"startingDate", "isSettable":"true", "childShortcut":"DateCreator"} ],
+    "parentAttribute": "starting",
+    "isContext": true,
+    "stringTriggers": [{ "name": "#starting", "description": "The date when the patient will start taking the medication."}],
+    "knownParentContexts": "Prescribe",
+    "description":"The date when the patient will start taking the medication.",
+    "shortcutGroupName":"Starting Date"
   },
   { "type": "SingleHashtagKeyword",
     "id": "StagingCreator",

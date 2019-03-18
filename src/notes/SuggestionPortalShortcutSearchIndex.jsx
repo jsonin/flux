@@ -1,23 +1,8 @@
 import SuggestionPortalSearchIndex from './SuggestionPortalSearchIndex';
+import { callValuesetOnAPI } from '../shortcuts/CreatorChildService';
 import Fuse from 'fuse.js';
 import Lang from 'lodash';
 import _ from 'lodash';
-import ShortcutServicesClient from 'coze_healthflux_notes_autocomplete_api_example';
-
-const ApiClient = new ShortcutServicesClient.ApiClient();
-const api = new ShortcutServicesClient.DefaultApi(ApiClient);
-
-function callValuesetOnAPI(api, valueSetType, searchText) { //valuesetname, searchText
-    return new Promise((resolve, reject) => {
-        api.valueset(valueSetType, searchText, (error, data, response) => { //valuesetname, searchText
-            if (error) {
-                reject(error);
-            } else {
-                resolve(data);
-            }
-        });
-    });
-}
 
 class SuggestionPortalShortcutSearchIndex extends SuggestionPortalSearchIndex  {
     constructor(list, initialChar, shortcutManager) { 
@@ -78,13 +63,12 @@ class SuggestionPortalShortcutSearchIndex extends SuggestionPortalSearchIndex  {
 
         if (this.serviceShortcutsMetadata && this.serviceShortcutsMetadata.length > 0) {
             const metadataForServiceShortcut = this.serviceShortcutsMetadata[0];
-            ApiClient.basePath = metadataForServiceShortcut["service"];
 
             // valueSetType
             const valueSetType = metadataForServiceShortcut["valueSetType"];
-    
+
             // call API
-            return callValuesetOnAPI(api, valueSetType, searchText).then((result) => {
+            return callValuesetOnAPI(metadataForServiceShortcut["service"], valueSetType, searchText).then((result) => {
                 return result.map((s) => {
                     return { 
                         key: s.code, 

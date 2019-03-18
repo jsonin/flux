@@ -202,13 +202,13 @@ export default class EntryShortcut extends Shortcut {
         return true;
     }
 
-    updatePatient(patient, contextManager, clinicalNote) {
+    updatePatient(patient, contextManager, clinicalNote, loginUser) {
         if (this.isObjectNew) {
             const updatePatientSpecList = this.metadata["updatePatient"];
             let result;
             if (updatePatientSpecList) {
                 updatePatientSpecList.forEach((updatePatientSpec) => {
-                    result = this.callMethod(patient, updatePatientSpec, clinicalNote);
+                    result = this.callMethod(patient, updatePatientSpec, clinicalNote, loginUser);
                     if (Lang.isNull(result)) {
                         this.isObjectNew = false;
                         return;
@@ -342,7 +342,7 @@ export default class EntryShortcut extends Shortcut {
         return result;
     }
 
-    callMethod(patient, spec, clinicalNote) {
+    callMethod(patient, spec, clinicalNote, loginUser) {
         //{"object":"patient", "method": "addObservationToCondition", "args": [ "$valueObject", "$parentValueObject"]}
         const obj = spec["object"];
         const method = spec["method"];
@@ -359,6 +359,7 @@ export default class EntryShortcut extends Shortcut {
                 return this.parentContext.getValueObject();
             } 
             if (argSpec === "$clinicalNote") return clinicalNote;
+            if (argSpec === "$user") return loginUser.getUserName();
             return argSpec;
         });
         if (Lang.isUndefined(listAttribute) && Lang.isUndefined(attribute)) {

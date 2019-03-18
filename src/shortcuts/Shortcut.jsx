@@ -118,6 +118,7 @@ class Shortcut extends Context {
         //   (1) use known parent context if attribute exists
         //   (2) use parent with correct parent attribute
         //   (3) use current context (maybe this should just be an error?)
+        console.log(knownParent);
         if (knownParent) {
             this.parentContext = contextManager.getActiveContextOfType(knownParent);
         } else {

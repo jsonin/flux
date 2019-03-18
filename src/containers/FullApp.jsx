@@ -297,7 +297,7 @@ export class FullApp extends Component {
         let p = this.state.patient;
         let note = this.state.openClinicalNote;
         if (s.doesUpdatePatient()) {
-            s.updatePatient(p, this.contextManager, note);
+            s.updatePatient(p, this.contextManager, note, this.state.loginUser);
         }
     }
 

@@ -10,6 +10,7 @@ import ValueSetManager from '../lib/ValueSetManager';
 import shortcutMetadata from './Shortcuts.json';
 import Lang from 'lodash';
 import NLPHashtag from './NLPHashtag';
+import { callValuesetOnAPI } from '../shortcuts/CreatorChildService';
 
 // Given a trigger object, add it and any subsidiary trigger objects to our triggersPerShortcut map
 function addTriggerForCurrentShortcut(triggerObject, currentShortcut) {
@@ -351,31 +352,50 @@ class ShortcutManager {
     }
     
     // context is optional
-    getTriggersForShortcut(shortcutId, context) {
-        if (Lang.isUndefined(this.shortcuts[shortcutId]["stringTriggers"])) { 
+    getTriggersForShortcut(shortcutId, context, searchString) {
+        // console.log("getTriggersForShortcut", shortcutId, context, searchString);
+        const shortcutMetadata = this.shortcuts[shortcutId];
+        let preFilteredList = this.triggersPerShortcut[shortcutId];
+        if (Lang.isEmpty(preFilteredList)) {
+            if (Lang.isUndefined(searchString)) return [];
+            // console.log("getTriggersForShortcut", searchString);
+
+            if (shortcutMetadata["type"] === 'CreatorChildService') {
+                const valueSetType = shortcutMetadata["valueSetType"];
+
+                return callValuesetOnAPI(shortcutMetadata["service"], valueSetType, searchString).then((result) => {
+                    return result.map((s) => {
+                        return { 
+                            name: s.label, description: s.code + " - " + s.label
+                        };
+                    });
+                });
+            }
             return [];
         } else if (!Lang.isUndefined(context)) {
             const currentContextId = context.getId();
-            const parentAttribute = this.shortcuts[shortcutId]["parentAttribute"];
-            if (Lang.isUndefined(parentAttribute)) return this.triggersPerShortcut[shortcutId];
-            const parentVOAs = this.shortcuts[currentContextId]["valueObjectAttributes"];
-            const parentIdVOAs = this.shortcuts[currentContextId]["idAttributes"];
-            let voa = parentVOAs.filter((item) => item.name === parentAttribute)[0];
-            if (!voa) voa = parentIdVOAs.filter((item) => item.name === parentAttribute)[0];
-            const value = context.getAttributeValue(parentAttribute);
-            const isSettable = Lang.isUndefined(voa.isSettable) ? false : (voa.isSettable === "true");
-            if (isSettable) { // if is settable and not set, then we want to include the shortcut
-                if (value !== null && Lang.isArray(value)) {
-                    let list = this.triggersPerShortcut[shortcutId];
-                    list = list.filter((item) => {
-                        return !value.includes(item.name.substring(1));
-                    });
-                    return list;
+            const parentAttribute = shortcutMetadata["parentAttribute"];
+            if (!Lang.isUndefined(parentAttribute)) { //return this.triggersPerShortcut[shortcutId];
+                const parentVOAs = this.shortcuts[currentContextId]["valueObjectAttributes"];
+                const parentIdVOAs = this.shortcuts[currentContextId]["idAttributes"];
+                let voa = parentVOAs.filter((item) => item.name === parentAttribute)[0];
+                if (!voa) voa = parentIdVOAs.filter((item) => item.name === parentAttribute)[0];
+                const value = context.getAttributeValue(parentAttribute);
+                const isSettable = Lang.isUndefined(voa.isSettable) ? false : (voa.isSettable === "true");
+                if (isSettable) { // if is settable and not set, then we want to include the shortcut
+                    if (value !== null && Lang.isArray(value)) {
+                        preFilteredList = preFilteredList.filter((item) => {
+                            return !value.includes(item.name.substring(1));
+                        });
+                    }
                 }
             }
         }
-
-        return this.triggersPerShortcut[shortcutId];
+        // If there's a search string to filter on, filter
+        if (Lang.isUndefined(searchString) || searchString.length === 0) return preFilteredList;
+        return preFilteredList.filter((trigger) => {
+            return (trigger.name.toLowerCase().indexOf(searchString.toLowerCase()) !== -1);
+        });
     }
 
     getKeywordsForShortcut(shortcutId, context) {
