@@ -133,7 +133,6 @@ class ContextManager {
 
     adjustActiveContexts(shouldContextBeActive) {
         this.activeContexts = [];
-        console.log(this.contexts);
         this.contexts.forEach((context) => {
             if (shouldContextBeActive(context)) {
                 this.activeContexts.push(context);

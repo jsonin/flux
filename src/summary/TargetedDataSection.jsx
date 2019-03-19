@@ -179,7 +179,7 @@ export default class TargetedDataSection extends Component {
         if(section.nameSuffixFunction) {
             const result = section.nameSuffixFunction(section);
         
-            if (Lang.isObject(result) && !Lang.isUndefined(result.then)){
+            if (Lang.isObject(result) && !Lang.isUndefined(result.then)) {
                 result.then( suffix => {
                     this.setState({
                         sectionNameSuffix: suffix
