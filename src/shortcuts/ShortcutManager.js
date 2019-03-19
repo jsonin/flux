@@ -121,9 +121,9 @@ class ShortcutManager {
         });
     }
     
-    getAllStringTriggers() {
-        return Object.keys(this.shortcutMap);
-    }
+    // getAllStringTriggers() {
+    //     return Object.keys(this.shortcutMap);
+    // }
 
     getAllKeywords() {
         return Object.keys(this.shortcutMap);
@@ -353,12 +353,10 @@ class ShortcutManager {
     
     // context is optional
     getTriggersForShortcut(shortcutId, context, searchString) {
-        // console.log("getTriggersForShortcut", shortcutId, context, searchString);
         const shortcutMetadata = this.shortcuts[shortcutId];
         let preFilteredList = this.triggersPerShortcut[shortcutId];
         if (Lang.isEmpty(preFilteredList)) {
             if (Lang.isUndefined(searchString)) return [];
-            // console.log("getTriggersForShortcut", searchString);
 
             if (shortcutMetadata["type"] === 'CreatorChildService') {
                 const valueSetType = shortcutMetadata["valueSetType"];
@@ -366,7 +364,7 @@ class ShortcutManager {
                 return callValuesetOnAPI(shortcutMetadata["service"], valueSetType, searchString).then((result) => {
                     return result.map((s) => {
                         return { 
-                            name: s.label, description: s.code + " - " + s.label
+                            name: shortcutMetadata["prefixCharacter"] + s.label, description: s.code + " - " + s.label
                         };
                     });
                 });

@@ -25,30 +25,41 @@ export default class NoteParser {
         } else {
             this.contextManager = contextManager;
         }
-        this.allStringTriggersRegExp = undefined;
+        //this.allStringTriggersRegExp = undefined;
         //this.triggerMap = {};
 
         // build up all trigger string regular expression
-        let allTriggers = this.shortcutManager.getAllStringTriggers();
+        //let allTriggers = this.shortcutManager.getAllStringTriggers();
         //console.log(allTriggers);
         let allShortcuts = this.shortcutManager.getAllShortcutDefinitions();
 
-        this.allStringTriggersRegExp = new RegExp("(" + allTriggers.join("|") + ")", 'i');
+        //this.allStringTriggersRegExp = new RegExp("(" + allTriggers.join("|") + ")", 'i');
 
         // build list of regular expression triggers
         this.allTriggersRegExps = [];
-        let regexp;
+        let regexp, stringTriggers;
         allShortcuts.forEach((def) => {
+            console.log(def);
             regexp = def.regexpTrigger;
             if (regexp) {
+                console.log("**REGEXP", regexp);
                 this.allTriggersRegExps.push({regexp: regexp, definition: def});
+            }
+            stringTriggers = this.shortcutManager.getTriggersForShortcut(def.id);
+            if (stringTriggers.length > 0) {
+                console.log("stringTriggers", stringTriggers);
+                regexp = new RegExp("(" + stringTriggers.join("|") + ")", 'i');
+                this.allTriggersRegExps.push({regexp: regexp, definition: def});
+            }
+            if (def.type === "CreatorChildService") {
+                console.log("************service");
             }
         });
     }
 
-    getAllTriggersRegularExpression() {
-        return this.allStringTriggersRegExp;
-    }
+    // getAllTriggersRegularExpression() {
+    //     return this.allStringTriggersRegExp;
+    // }
 
     // Update shortcuts and update patients accordingly
     handleShortcutUpdate = (s) => {
@@ -95,7 +106,15 @@ export default class NoteParser {
             match = substr.match(tocheck.regexp);
             if (!Lang.isNull(match)) {
                 //console.log("matched " + tocheck.regexp);
-                matches.push({trigger: match[0], definition: tocheck.definition});
+                let possibleValue = substr.substring(match[0].length);
+                let selectedValue = null;
+
+                 // Check if the shortcut is an inserter (check for '[['). If it is, grab the selected value
+                if (possibleValue.startsWith("[[")) {
+                    let posOfEndBrackets = possibleValue.indexOf("]]");
+                    selectedValue = possibleValue.substring(2, posOfEndBrackets);                 
+                }
+                matches.push({trigger: match[0], definition: tocheck.definition, selectedValue: selectedValue});
                 found = true;
             }
         }
@@ -108,25 +127,25 @@ export default class NoteParser {
             } else {
                 substr = note.substring(hashPos, nextPos);
             }
-            match = substr.match(this.allStringTriggersRegExp);
-            if (Lang.isNull(match)) {
+            //match = substr.match(this.allStringTriggersRegExp);
+            //if (Lang.isNull(match)) {
                 found = false;
                 this.allTriggersRegExps.forEach(checkForTriggerRegExpMatch);
                 if (!found) {
                     //console.log("not a recognized structured phrase: " + substr);
                     unrecognizedTriggers.push(substr);
                 }
-            } else {
-                let possibleValue = substr.substring(match[0].length);
-                let selectedValue = null;
+            // } else {
+            //     let possibleValue = substr.substring(match[0].length);
+            //     let selectedValue = null;
 
-                 // Check if the shortcut is an inserter (check for '[['). If it is, grab the selected value
-                if (possibleValue.startsWith("[[")) {
-                    let posOfEndBrackets = possibleValue.indexOf("]]");
-                    selectedValue = possibleValue.substring(2, posOfEndBrackets);                 
-                }
-                matches.push({trigger: match[0], definition: this.shortcutManager.getMetadataForTrigger(match[0]), selectedValue: selectedValue});
-            }
+            //      // Check if the shortcut is an inserter (check for '[['). If it is, grab the selected value
+            //     if (possibleValue.startsWith("[[")) {
+            //         let posOfEndBrackets = possibleValue.indexOf("]]");
+            //         selectedValue = possibleValue.substring(2, posOfEndBrackets);                 
+            //     }
+            //     matches.push({trigger: match[0], definition: this.shortcutManager.getMetadataForTrigger(match[0]), selectedValue: selectedValue});
+            // }
             pos = hashPos + 1;
             hashPos = nextPos;
         }
