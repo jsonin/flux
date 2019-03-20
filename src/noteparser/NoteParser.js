@@ -53,6 +53,7 @@ export default class NoteParser {
             }
             if (def.type === "CreatorChildService") {
                 console.log("************service");
+                this.allTriggersRegExps.push({definition: def});
             }
         });
     }
@@ -103,19 +104,31 @@ export default class NoteParser {
         let matches = [];
         let match, substr, nextPos, found;
         let checkForTriggerRegExpMatch = (tocheck) => {
-            match = substr.match(tocheck.regexp);
-            if (!Lang.isNull(match)) {
-                //console.log("matched " + tocheck.regexp);
-                let possibleValue = substr.substring(match[0].length);
-                let selectedValue = null;
-
-                 // Check if the shortcut is an inserter (check for '[['). If it is, grab the selected value
-                if (possibleValue.startsWith("[[")) {
-                    let posOfEndBrackets = possibleValue.indexOf("]]");
-                    selectedValue = possibleValue.substring(2, posOfEndBrackets);                 
+            if (tocheck.regexp) {
+                match = substr.match(tocheck.regexp);
+                if (!Lang.isNull(match)) {
+                    //console.log("matched " + tocheck.regexp);
+                    let possibleValue = substr.substring(match[0].length);
+                    let selectedValue = null;
+    
+                     // Check if the shortcut is an inserter (check for '[['). If it is, grab the selected value
+                    if (possibleValue.startsWith("[[")) {
+                        let posOfEndBrackets = possibleValue.indexOf("]]");
+                        selectedValue = possibleValue.substring(2, posOfEndBrackets);                 
+                    }
+                    matches.push({trigger: match[0], definition: tocheck.definition, selectedValue: selectedValue});
+                    found = true;
                 }
-                matches.push({trigger: match[0], definition: tocheck.definition, selectedValue: selectedValue});
-                found = true;
+            } else {
+                // service shortcut
+                // just send first word of substr and then find longest matching trigger value returned that matches the start of substr
+                // then will have to do the above and return a promise
+
+                let parts = substr.split(" ");
+                this.shortcutManager.getTriggersForShortcut(tocheck.definition.id, undefined, parts[0]).then((result) => {
+                    
+                });
+                matches.push({definition: tocheck.definition, promise: p});
             }
         }
         let hashPos = this.getNextTriggerIndex(note, triggerChars, pos);
