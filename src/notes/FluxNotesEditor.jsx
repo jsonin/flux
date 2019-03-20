@@ -1484,6 +1484,7 @@ class FluxNotesEditor extends React.Component {
         // Loop through shortcut triggers to determine if any of them require users to choose from pick list
         if (!Lang.isNull(triggers)) {
             triggers.forEach((trigger) => {
+                console.log(trigger);
                 start = remainder.indexOf(trigger.trigger);
                 remainder = remainder.substring(start + trigger.trigger.length);
 

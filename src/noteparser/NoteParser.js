@@ -125,8 +125,8 @@ export default class NoteParser {
                 // then will have to do the above and return a promise
 
                 let parts = substr.split(" ");
-                this.shortcutManager.getTriggersForShortcut(tocheck.definition.id, undefined, parts[0]).then((result) => {
-                    
+                let p = this.shortcutManager.getTriggersForShortcut(tocheck.definition.id, undefined, parts[0]).then((result) => {
+                    console.log(result);
                 });
                 matches.push({definition: tocheck.definition, promise: p});
             }
