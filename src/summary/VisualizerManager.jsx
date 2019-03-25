@@ -107,11 +107,9 @@ export default class VisualizerManager {
                     value: med.medication.medication,
                 },
                 {
-                    value: {
-                        isUnsigned,
-                        source,
-                        value: medicationChange,
-                    }
+                    isUnsigned,
+                    source,
+                    value: medicationChange,
                 },
                 {
                     value: dose,
@@ -123,12 +121,10 @@ export default class VisualizerManager {
                     value: med.medication.startDate,
                 },
                 {
-                    value: {
-                        isUnsigned,
-                        source,
-                        value: endDate,
-                    },
-                },
+                    isUnsigned,
+                    source,
+                    value: endDate,
+                }
             ];
         });
 
@@ -203,7 +199,7 @@ export default class VisualizerManager {
         list = items.map((item, i) => {
             const itemValue = (Lang.isNull(item.value)) ? null : (Lang.isFunction(item.value) ? item.value(patient, condition, this.user) : item.value);
             return [    { value: item.name, isInsertable: false},
-                        { value: itemValue || null}]
+                        { value: itemValue ? itemValue.value : null, isUnsigned: itemValue ? itemValue.isUnsigned : false, source: itemValue ? itemValue.source : null }]
         });
 
         // need to eliminate when value is an array as came from value of a name/value pair. In that case the value array

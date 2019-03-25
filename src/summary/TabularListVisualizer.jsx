@@ -255,9 +255,9 @@ export default class TabularListVisualizer extends Visualizer {
         const columnId = `${subsectionindex}-${itemIndex}-item-${colIndex}`
         const isInsertable = _.isUndefined(col.isInsertable) ? true : col.isInsertable;
         let columnItem = null;
-        const when = (col.value ? (col.value.when || null) : null);
-        const isUnsigned = (col.value) ? col.value.isUnsigned || false : false;
-        let colText = _.isObject(col.value) ? col.value.value : col.value;
+        const when = (col.when ? (col.when || null) : null);
+        const isUnsigned = (col.isUnsigned) ? col.isUnsigned || false : false;
+        let colText = col.value;
         const longElementText = colText;
 
         if (!_.isNull(colText) && colText.length > 100) colText = colText.substring(0, 100) + "...";
