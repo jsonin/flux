@@ -47,8 +47,9 @@ export default class NoteParser {
             }
             stringTriggers = this.shortcutManager.getTriggersForShortcut(def.id);
             if (stringTriggers.length > 0) {
-                console.log("stringTriggers", stringTriggers);
-                regexp = new RegExp("(" + stringTriggers.join("|") + ")", 'i');
+                //console.log(stringTriggers);
+                regexp = new RegExp("(" + stringTriggers.map((re) => re.name).join("|") + ")", 'i');
+                console.log("stringTriggers", regexp);
                 this.allTriggersRegExps.push({regexp: regexp, definition: def});
             }
             if (def.type === "CreatorChildService") {
@@ -97,6 +98,19 @@ export default class NoteParser {
        return (trigger.definition.getData && trigger.definition.getData.itemKey);
     }
 
+    handleServiceSearches = (result, parts, index, matches, tocheck) => {
+        console.log(result);
+        if (result.length > 0) {
+            matches.push({definition: tocheck.definition, trigger: result[0]});
+        } else {
+            index++;
+            if (index <= parts.length) {
+                let searchFor = parts.slice(0, index)
+                this.shortcutManager.getTriggersForShortcut(tocheck.definition.id, undefined, searchFor).then(this.handleServiceSearches);
+            }
+        }
+    }
+
     getListOfTriggersFromText(note) {
         let unrecognizedTriggers = [];
         const triggerChars = ['#', '@'];
@@ -107,7 +121,7 @@ export default class NoteParser {
             if (tocheck.regexp) {
                 match = substr.match(tocheck.regexp);
                 if (!Lang.isNull(match)) {
-                    //console.log("matched " + tocheck.regexp);
+                    console.log("matched " + tocheck.regexp);
                     let possibleValue = substr.substring(match[0].length);
                     let selectedValue = null;
     
@@ -125,10 +139,9 @@ export default class NoteParser {
                 // then will have to do the above and return a promise
 
                 let parts = substr.split(" ");
-                let p = this.shortcutManager.getTriggersForShortcut(tocheck.definition.id, undefined, parts[0]).then((result) => {
-                    console.log(result);
-                });
-                matches.push({definition: tocheck.definition, promise: p});
+                let index = 1;
+                console.log(parts);
+                this.shortcutManager.getTriggersForShortcut(tocheck.definition.id, undefined, parts[0]).then(this.handleServiceSearches.bind(this, parts, index, matches, tocheck));
             }
         }
         let hashPos = this.getNextTriggerIndex(note, triggerChars, pos);
