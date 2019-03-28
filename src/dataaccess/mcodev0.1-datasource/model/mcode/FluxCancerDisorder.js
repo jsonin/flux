@@ -5,7 +5,7 @@ class FluxCancerDisorder extends FluxConditionPresentAssertion {
     constructor(json, type, patientRecord) {
         super();
         this._patientRecord = patientRecord;
-        this._condition = this._entry = CancerDisorder.fromJSON(json);
+        if (json) this._condition = this._entry = CancerDisorder.fromJSON(json);
     }
 }
 
