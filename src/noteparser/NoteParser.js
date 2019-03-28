@@ -106,7 +106,7 @@ export default class NoteParser {
             index++;
             if (index <= parts.length) {
                 let searchFor = parts.slice(0, index)
-                this.shortcutManager.getTriggersForShortcut(tocheck.definition.id, undefined, searchFor).then(this.handleServiceSearches);
+                this.shortcutManager.getTriggersForShortcut(tocheck.definition.id, undefined, searchFor).then(this.handleServiceSearches.bind(this, parts, index, matches, tocheck));
             }
         }
     }
