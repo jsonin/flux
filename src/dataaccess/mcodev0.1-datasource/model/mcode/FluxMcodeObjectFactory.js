@@ -16,7 +16,7 @@ export default class FluxMcodeObjectFactory {
         }
         // returns Flux wrapper class if found, otherwise use McodeObjectFactory
         switch (elementName) {
-            case 'CancerDisorder': return new FluxCancerDisorder(json, type, patientRecord);
+            case 'CancerDisorder': return FluxCancerDisorder(json, type, patientRecord);
             case 'CancerHistologicGrade': return new FluxHistologicGrade(json, type, patientRecord);
             case 'CancerHistologicType': return new FluxCancerHistologicType(json, type, patientRecord);
             case 'CancerProgression': return new FluxCancerProgression(json, type, patientRecord);
