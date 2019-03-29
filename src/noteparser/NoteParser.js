@@ -98,7 +98,7 @@ export default class NoteParser {
        return (trigger.definition.getData && trigger.definition.getData.itemKey);
     }
 
-    handleServiceSearches = (result, parts, index, matches, tocheck) => {
+    handleServiceSearches = (parts, index, matches, tocheck, result) => {
         console.log(result);
         if (result.length > 0) {
             matches.push({definition: tocheck.definition, trigger: result[0]});
@@ -111,6 +111,7 @@ export default class NoteParser {
         }
     }
 
+    /* this should return a promise */
     getListOfTriggersFromText(note) {
         let unrecognizedTriggers = [];
         const triggerChars = ['#', '@'];
@@ -141,7 +142,8 @@ export default class NoteParser {
                 let parts = substr.split(" ");
                 let index = 1;
                 console.log(parts);
-                this.shortcutManager.getTriggersForShortcut(tocheck.definition.id, undefined, parts[0]).then(this.handleServiceSearches.bind(this, parts, index, matches, tocheck));
+                this.shortcutManager.getTriggersForShortcut(tocheck.definition.id, undefined, parts[0])
+                    .then(this.handleServiceSearches.bind(this, parts, index, matches, tocheck));
             }
         }
         let hashPos = this.getNextTriggerIndex(note, triggerChars, pos);

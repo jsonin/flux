@@ -1396,6 +1396,7 @@ class FluxNotesEditor extends React.Component {
             remainder = remainder.split('<div>').join('');
         }
 
+        console.log("insertTextWithStructuredPhrases", textToBeInserted);
         const triggers = this.noteParser.getListOfTriggersFromText(textToBeInserted)[0];
         let pickListCount = 0;
 
@@ -1479,7 +1480,9 @@ class FluxNotesEditor extends React.Component {
         let remainder = contextTrayItem;
         let start, end;
         let localArrayOfPickLists = [];
+        console.log("insertContextTrayItem", contextTrayItem);
         const triggers = this.noteParser.getListOfTriggersFromText(contextTrayItem)[0];
+        console.log(triggers);
 
         // Loop through shortcut triggers to determine if any of them require users to choose from pick list
         if (!Lang.isNull(triggers)) {

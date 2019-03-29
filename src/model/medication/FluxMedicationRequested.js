@@ -19,7 +19,6 @@ import Code from '../shr/core/Code';
 import Coding from '../shr/core/Coding';
 import DisplayText from '../shr/core/DisplayText';
 import Metadata from '../shr/base/Metadata';
-import FluxEntry from '../base/FluxEntry';
 import Reason from '../shr/base/Reason';
 
 class FluxMedicationRequested extends FluxEntry {
