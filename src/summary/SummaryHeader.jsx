@@ -63,7 +63,7 @@ class SummaryHeader extends Component {
         const dateOfBirthString = (dateOfBirth) ? `${dateOfBirth} (${age})` : '?';
         const administrativeSexString = (administrativeSex) ? administrativeSex : '?';
         //{address ? address.city.value : ""}, {address ? address.state.value : ""}
-        const locationString = (address) ? `${address.city.value}, ${address.state.value}` : '?'; 
+        const locationString = (address) ? `${address.city.value}, ${address.state.value}` : '?';
         return (
             <div id="summary-header">
                 <div className="avatar">
@@ -145,7 +145,7 @@ SummaryHeader.propTypes = {
             value: PropTypes.string
         }),
         state: PropTypes.shape({
-            value: PropTypes.state
+            value: PropTypes.string
         })
     }),
     layout: PropTypes.string,

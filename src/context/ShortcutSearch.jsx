@@ -5,7 +5,7 @@ import TextField from 'material-ui/TextField';
 import './ShortcutSearch.css'
 
 export default class ShortcutSearch extends Component {
-    render () { 
+    render () {
         return (
             <div id="shortcut-search">
                 <div className="shortcut-search-container">
@@ -21,7 +21,7 @@ export default class ShortcutSearch extends Component {
     }
 }
 
-ShortcutSearch.proptypes = {
+ShortcutSearch.propTypes = {
     context: PropTypes.object,
     contextManager: PropTypes.object.isRequired,
     handleClick: PropTypes.func.isRequired,

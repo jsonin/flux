@@ -126,7 +126,7 @@ export default class TreatmentOptionsOutcomes extends Component {
     }
 
     renderRow(row, compareRow) {
-        if (row == null || row.length === 0) return null;
+        if (row===null || row.length === 0) return null;
 
         const { displayName, totalPatients, sideEffects } = row;
         const topSideEffects = Object.keys(sideEffects.effects).map((sideEffect) => {
