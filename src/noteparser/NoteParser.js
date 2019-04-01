@@ -37,7 +37,7 @@ export default class NoteParser {
 
         // build list of regular expression triggers
         this.allTriggersRegExps = [];
-        let regexp, stringTriggers;
+        let regexp; //, stringTriggers;
         allShortcuts.forEach((def) => {
             console.log(def);
             regexp = def.regexpTrigger;
@@ -45,17 +45,18 @@ export default class NoteParser {
                 console.log("**REGEXP", regexp);
                 this.allTriggersRegExps.push({regexp: regexp, definition: def});
             }
-            stringTriggers = this.shortcutManager.getTriggersForShortcut(def.id);
-            if (stringTriggers.length > 0) {
-                //console.log(stringTriggers);
-                regexp = new RegExp("(" + stringTriggers.map((re) => re.name).join("|") + ")", 'i');
-                console.log("stringTriggers", regexp);
-                this.allTriggersRegExps.push({regexp: regexp, definition: def});
-            }
-            if (def.type === "CreatorChildService") {
-                console.log("************service");
-                this.allTriggersRegExps.push({definition: def});
-            }
+            this.shortcutManager.getTriggersForShortcut(def.id).then((stringTriggers) => {
+                if (stringTriggers.length > 0) {
+                    //console.log(stringTriggers);
+                    regexp = new RegExp("(" + stringTriggers.map((re) => re.name).join("|") + ")", 'i');
+                    console.log("stringTriggers", regexp);
+                    this.allTriggersRegExps.push({regexp: regexp, definition: def});
+                }
+                if (def.type === "CreatorChildService") {
+                    console.log("************service");
+                    this.allTriggersRegExps.push({definition: def});
+                }
+            });
         });
     }
 
