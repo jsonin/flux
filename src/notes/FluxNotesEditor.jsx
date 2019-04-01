@@ -304,6 +304,7 @@ class FluxNotesEditor extends React.Component {
 
         // check if shortcutTrigger is currently valid
         if (!this.shortcutTriggerCheck(shortcutC, shortcutTrigger)) {
+            console.log('################ ' + shortcutTrigger + ' is not valid');
             return this.insertPlainText(transform, shortcutTrigger);
         }
 

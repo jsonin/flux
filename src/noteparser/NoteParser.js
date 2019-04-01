@@ -111,7 +111,18 @@ export default class NoteParser {
         }
     }
 
-    /* this should return a promise */
+    /* argument is a note - string of text with 0 to many shortcuts in it */
+    /* output: [ matches, unrecognized ]
+            matches:[   {
+                            trigger: <found trigger>, 
+                            definition: <metadata for shortcut trigger is for>,
+                            selectedValue: <if shortcut was followed by [[value]] then value is selected value for the shortcut else omitted>
+                        }
+                    ]
+            unrecognized:   [
+                                <string beginning with shortcut prefix like # or @ that did not match any triggers>
+                            ]
+     */
     getListOfTriggersFromText(note) {
         let unrecognizedTriggers = [];
         const triggerChars = ['#', '@'];
