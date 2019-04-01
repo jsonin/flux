@@ -106,7 +106,7 @@ export default class ContextOptions extends Component {
         this.validShortcuts.forEach((shortcutId, i) => {
             let groupName = this.props.shortcutManager.getShortcutGroupName(shortcutId);
             const triggersForShortcut = this.props.shortcutManager.getTriggersForShortcut(shortcutId, context, this.props.searchString);
-            if (Lang.isObject(triggersForShortcut) && !Lang.isUndefined(triggersForShortcut.then)) {
+            // if (Lang.isObject(triggersForShortcut) && !Lang.isUndefined(triggersForShortcut.then)) {
                 triggersForShortcut.then((result) => {
                     result.forEach((trigger, j) => {
                         // // If there's a search string to filter on, filter
@@ -118,16 +118,16 @@ export default class ContextOptions extends Component {
                     });
                     
                 })
-            } else {
-                triggersForShortcut.forEach((trigger, j) => {
-                    // // If there's a search string to filter on, filter
-                    // if (this.props.searchString.length === 0 || trigger.name.toLowerCase().indexOf(this.props.searchString.toLowerCase()) !== -1) {
-                        let triggerDescription = !Lang.isNull(trigger.description) ? trigger.description : '';
-                        this.triggers.push({"name": trigger.name, "description": triggerDescription, "group": i, "groupName": groupName });
-                    // }
-                });
+            // } else {
+            //     triggersForShortcut.forEach((trigger, j) => {
+            //         // // If there's a search string to filter on, filter
+            //         // if (this.props.searchString.length === 0 || trigger.name.toLowerCase().indexOf(this.props.searchString.toLowerCase()) !== -1) {
+            //             let triggerDescription = !Lang.isNull(trigger.description) ? trigger.description : '';
+            //             this.triggers.push({"name": trigger.name, "description": triggerDescription, "group": i, "groupName": groupName });
+            //         // }
+            //     });
     
-            }
+            // }
         });
     }
 

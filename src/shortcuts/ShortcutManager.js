@@ -352,11 +352,14 @@ class ShortcutManager {
     }
     
     // context is optional
+    // always returns a Promise
     getTriggersForShortcut(shortcutId, context, searchString) {
         const shortcutMetadata = this.shortcuts[shortcutId];
         let preFilteredList = this.triggersPerShortcut[shortcutId];
         if (Lang.isEmpty(preFilteredList)) {
-            if (Lang.isUndefined(searchString)) return [];
+            if (Lang.isUndefined(searchString)) return new Promise(function(resolve, reject) {
+                resolve([]);
+            });
 
             if (shortcutMetadata["type"] === 'CreatorChildService') {
                 const valueSetType = shortcutMetadata["valueSetType"];
@@ -369,7 +372,9 @@ class ShortcutManager {
                     });
                 });
             }
-            return [];
+            return new Promise(function(resolve, reject) {
+                resolve([]);
+            });
         } else if (!Lang.isUndefined(context)) {
             const currentContextId = context.getId();
             const parentAttribute = shortcutMetadata["parentAttribute"];
@@ -390,9 +395,15 @@ class ShortcutManager {
             }
         }
         // If there's a search string to filter on, filter
-        if (Lang.isUndefined(searchString) || searchString.length === 0) return preFilteredList;
-        return preFilteredList.filter((trigger) => {
-            return (trigger.name.toLowerCase().indexOf(searchString.toLowerCase()) !== -1);
+        if (Lang.isUndefined(searchString) || searchString.length === 0) {
+            return new Promise(function(resolve, reject) {
+                resolve(preFilteredList);
+            });
+        }
+        return new Promise(function(resolve, reject) {
+            resolve(preFilteredList.filter((trigger) => {
+                return (trigger.name.toLowerCase().indexOf(searchString.toLowerCase()) !== -1);
+            }));
         });
     }
 
