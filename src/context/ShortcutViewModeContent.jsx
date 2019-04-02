@@ -112,9 +112,8 @@ export default class ShortcutViewModeContent extends Component {
         return (
             <div>
                 <ShortcutSearch
-                    currentSearchString={this.state.searchString}
                     handleSearch={this.handleSearch}
-                    />
+                />
                 {this.renderAllActiveContexts(activeContexts)}
                 <ContextOptions
                     searchString={this.state.searchString}
@@ -130,6 +129,5 @@ export default class ShortcutViewModeContent extends Component {
 ShortcutViewModeContent.propTypes= {
     contextManager: PropTypes.object.isRequired,
     onShortcutClicked: PropTypes.func.isRequired,
-    patient: PropTypes.object.isRequired,
     shortcutManager: PropTypes.object.isRequired,
 }

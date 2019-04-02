@@ -175,7 +175,7 @@ TargetedDataPanel.propTypes = {
     actions: PropTypes.array.isRequired,
     appState: PropTypes.shape({
         patient: PropTypes.object.isRequired,
-        clinicalEvent: PropTypes.object.isRequired,
+        clinicalEvent: PropTypes.string.isRequired,
         condition: PropTypes.object,
     }).isRequired,
     forceRefresh: PropTypes.bool,

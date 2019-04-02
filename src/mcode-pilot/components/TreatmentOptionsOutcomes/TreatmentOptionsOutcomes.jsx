@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import FontAwesome from 'react-fontawesome';
-import _ from 'lodash';
 
 import BarChart from '../../visualizations/BarChart/BarChart';
 import TableLegend from '../../visualizations/TableLegend/TableLegend';

@@ -1,5 +1,4 @@
 import * as types from '../actions/types';
-import _ from 'lodash';
 import defaultState from './initial.json';
 import getProps from '../mcode-pilot/utils/recordToProps';
 export default function mcode(state = defaultState, action) {

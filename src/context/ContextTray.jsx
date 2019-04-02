@@ -106,7 +106,6 @@ export default class ContextTray extends Component {
                 {viewMode === this.SHORTCUT_VIEW && (
                     <ShortcutViewModeContent
                         contextManager={contextManager}
-                        handleClick={this.handleShortcutClick}
                         onShortcutClicked={onShortcutClicked}
                         shortcutManager={shortcutManager}
                     />
