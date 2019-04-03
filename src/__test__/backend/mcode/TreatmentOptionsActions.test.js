@@ -4,7 +4,7 @@ import * as actions from '../../../actions/mcode'
 import * as types from '../../../actions/types'
 import '../../../model/init';
 import configureMockStore from 'redux-mock-store';
-import defaultState from '../../../src/reducers/initial.json';
+import defaultState from '../../../reducers/initial.json';
 import thunk from 'redux-thunk';
 
 import PatientRecord from '../../../patient/PatientRecord';
