@@ -42,10 +42,11 @@ let perFileFunc = (file) => {
         console.log(file);
         content = util.format(data);
         console.log(content);
-        result = noteParser.parse(content);
-        console.log(util.inspect(result[0], false, null));
-        console.log("Unrecognized structured phrases:");
-        console.log(result[1]);
+        noteParser.parse(content).then((result) => {
+            console.log(util.inspect(result[0], false, null));
+            console.log("Unrecognized structured phrases:");
+            console.log(result[1]);
+        });
     });
 };
 

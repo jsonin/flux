@@ -114,7 +114,8 @@ export default class NoteParser {
 
     /* argument is a note - string of text with 0 to many shortcuts in it */
     /* output: [ matches, unrecognized ]
-            matches:[   {
+            matches:[   Promise of 
+                        {
                             trigger: <found trigger>, 
                             definition: <metadata for shortcut trigger is for>,
                             selectedValue: <if shortcut was followed by [[value]] then value is selected value for the shortcut else omitted>
@@ -130,34 +131,6 @@ export default class NoteParser {
         let pos = 0;
         let matches = [];
         let match, substr, nextPos, found;
-        let checkForTriggerRegExpMatch = (tocheck) => {
-            if (tocheck.regexp) {
-                match = substr.match(tocheck.regexp);
-                if (!Lang.isNull(match)) {
-                    console.log("matched " + tocheck.regexp);
-                    let possibleValue = substr.substring(match[0].length);
-                    let selectedValue = null;
-    
-                     // Check if the shortcut is an inserter (check for '[['). If it is, grab the selected value
-                    if (possibleValue.startsWith("[[")) {
-                        let posOfEndBrackets = possibleValue.indexOf("]]");
-                        selectedValue = possibleValue.substring(2, posOfEndBrackets);                 
-                    }
-                    matches.push({trigger: match[0], definition: tocheck.definition, selectedValue: selectedValue});
-                    found = true;
-                }
-            } else {
-                // service shortcut
-                // just send first word of substr and then find longest matching trigger value returned that matches the start of substr
-                // then will have to do the above and return a promise
-
-                let parts = substr.split(" ");
-                let index = 1;
-                console.log(parts);
-                this.shortcutManager.getTriggersForShortcut(tocheck.definition.id, undefined, parts[0])
-                    .then(this.handleServiceSearches.bind(this, parts, index, matches, tocheck));
-            }
-        }
         let hashPos = this.getNextTriggerIndex(note, triggerChars, pos);
         while (hashPos !== -1) {
             //console.log(hashPos);
@@ -167,29 +140,44 @@ export default class NoteParser {
             } else {
                 substr = note.substring(hashPos, nextPos);
             }
-            //match = substr.match(this.allStringTriggersRegExp);
-            //if (Lang.isNull(match)) {
-                found = false;
-                this.allTriggersRegExps.forEach(checkForTriggerRegExpMatch);
-                if (!found) {
-                    //console.log("not a recognized structured phrase: " + substr);
-                    unrecognizedTriggers.push(substr);
+            found = false;
+            this.allTriggersRegExps.forEach((tocheck) => {
+                if (tocheck.regexp) {
+                    match = substr.match(tocheck.regexp);
+                    if (!Lang.isNull(match)) {
+                        console.log("matched " + tocheck.regexp);
+                        let possibleValue = substr.substring(match[0].length);
+                        let selectedValue = null;
+        
+                            // Check if the shortcut is an inserter (check for '[['). If it is, grab the selected value
+                        if (possibleValue.startsWith("[[")) {
+                            let posOfEndBrackets = possibleValue.indexOf("]]");
+                            selectedValue = possibleValue.substring(2, posOfEndBrackets);
+                        }
+                        matches.push(new Promise(function(resolve, reject) {
+                            resolve({trigger: match[0], definition: tocheck.definition, selectedValue: selectedValue});
+                        }));
+                        found = true;
+                    }
+                } else {
+                    // service shortcut
+                    // just send first word of substr and then find longest matching trigger value returned that matches the start of substr
+                    // then will have to do the above and return a promise
+    
+                    let parts = substr.split(" ");
+                    let index = 1;
+                    console.log(parts);
+                    matches.push(this.shortcutManager.getTriggersForShortcut(tocheck.definition.id, undefined, parts[0])
+                        .then(this.handleServiceSearches.bind(this, parts, index, matches, tocheck)));
                 }
-            // } else {
-            //     let possibleValue = substr.substring(match[0].length);
-            //     let selectedValue = null;
-
-            //      // Check if the shortcut is an inserter (check for '[['). If it is, grab the selected value
-            //     if (possibleValue.startsWith("[[")) {
-            //         let posOfEndBrackets = possibleValue.indexOf("]]");
-            //         selectedValue = possibleValue.substring(2, posOfEndBrackets);                 
-            //     }
-            //     matches.push({trigger: match[0], definition: this.shortcutManager.getMetadataForTrigger(match[0]), selectedValue: selectedValue});
-            // }
+            });
+            if (!found) {
+                unrecognizedTriggers.push(substr);
+            }
             pos = hashPos + 1;
             hashPos = nextPos;
         }
-        return [matches, unrecognizedTriggers];
+        return [Promise.all(matches), unrecognizedTriggers];
     }
 
     getNextTriggerIndex(note, triggerPrefixes, pos) {
@@ -262,13 +250,14 @@ export default class NoteParser {
     }
     
     parse(note) {         
-        this.note = note; 
+        this.note = note;
         const result = this.getListOfTriggersFromText(note);
-        const structuredPhrases = result[0];      
-        structuredPhrases.map(this.createShortcut.bind(this));
-        const foundKeywords = this.getAllKeywordsFromText(note);
-        foundKeywords.map(this.createShortcut.bind(this));
-
-        return [this.patient.getEntries(), result[1]];
+        result[0].then((structuredPhrases) => {
+            structuredPhrases.map(this.createShortcut.bind(this));
+            const foundKeywords = this.getAllKeywordsFromText(note);
+            foundKeywords.map(this.createShortcut.bind(this));
+    
+            return [this.patient.getEntries(), result[1]];    
+        });
     }
 }
