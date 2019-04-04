@@ -27,7 +27,6 @@ export default class TabularListVisualizer extends Visualizer {
 
     render() {
         const subsections = this.getSubsections();
-
         return (
             <div className="tabular-list">
                 {this.renderedSubsections(subsections)}

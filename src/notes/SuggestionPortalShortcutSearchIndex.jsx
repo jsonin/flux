@@ -20,13 +20,13 @@ class SuggestionPortalShortcutSearchIndex extends SuggestionPortalSearchIndex  {
         // We'll need to the active contexts to determine bonus scores, to improve sorting order.
         const activeContexts = contextManager.getActiveContexts();
         this.serviceShortcutsMetadata = [];
+        let allPromises = [];
         allShortcutObjs.forEach((shortcutObj) => {
             const shortcutId = shortcutObj.id;
             const shortcutMetadata = this.shortcutManager.getShortcutMetadata(shortcutId);
             if (shortcutMetadata["type"] === 'CreatorChildService') {
                 this.serviceShortcutsMetadata.push(shortcutMetadata);
             } else {
-                const triggers = this.shortcutManager.getTriggersForShortcut(shortcutId);
                 // Scores get sorted from smallest to greatest
                 // ActiveContexts is sorted from most recent to least recent
                 // We want shortcuts for the most recent shortcuts to have the smallest bonus score, so as to appear earlier
@@ -40,23 +40,27 @@ class SuggestionPortalShortcutSearchIndex extends SuggestionPortalSearchIndex  {
                     // we want those to come last; they get the biggest bonus 
                     scoreBonusBasedOnContext = activeContexts.length
                 }
-                triggers.forEach((trigger) => {
-                    const triggerPrefix = trigger.name.substring(0,1);
-                    const triggerNoPrefix = trigger.name.substring(1)
-                    if (this.initialChar === triggerPrefix) {
-                        relevantShortcutsFormattedForSearch.push({
-                            key: triggerNoPrefix,
-                            value: trigger,
-                            suggestion: triggerNoPrefix,
-                            knownParentContexts: shortcutMetadata.knownParentContexts,
-                            scoreBonusBasedOnContext 
-                        });
-                    }
-                });
+                allPromises.push(this.shortcutManager.getTriggersForShortcut(shortcutId).then((triggers) => {
+                    triggers.forEach((trigger) => {
+                        const triggerPrefix = trigger.name.substring(0,1);
+                        const triggerNoPrefix = trigger.name.substring(1)
+                        if (this.initialChar === triggerPrefix) {
+                            relevantShortcutsFormattedForSearch.push({
+                                key: triggerNoPrefix,
+                                value: trigger,
+                                suggestion: triggerNoPrefix,
+                                knownParentContexts: shortcutMetadata.knownParentContexts,
+                                scoreBonusBasedOnContext 
+                            });
+                        }
+                    });
+                }));
             }
         });
 
-        this.shortcutsFuse = new Fuse(relevantShortcutsFormattedForSearch, this.fuseOptions); 
+        Promise.all(allPromises).then((r) => {
+            this.shortcutsFuse = new Fuse(relevantShortcutsFormattedForSearch, this.fuseOptions);
+        });
     }
     search(searchText) {
         if (Lang.isUndefined(searchText)) return [];

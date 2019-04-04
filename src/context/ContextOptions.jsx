@@ -19,7 +19,6 @@ export default class ContextOptions extends Component {
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.context !== this.props.context) {
-            console.log("active context changed");
             this.newContext();
         }
     }
@@ -98,7 +97,6 @@ export default class ContextOptions extends Component {
 
     newContext = () => {
         let context = this.getCurrentContext();
-        console.log("newContext", context);
         this.validShortcuts = this.props.shortcutManager.getValidChildShortcutsInContext(context);
 
         // build our list of filtered triggers (only filter if we will be showing search bar)

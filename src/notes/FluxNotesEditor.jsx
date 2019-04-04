@@ -172,30 +172,33 @@ class FluxNotesEditor extends React.Component {
         // Get all non-keyword shortcuts for autoreplace
         const allNonKeywordShortcuts = this.props.shortcutManager.getAllShortcutsWithTriggers();
         const placeholderShortcuts = this.props.shortcutManager.getAllPlaceholderShortcuts();
-
+        let promises = [];
         allNonKeywordShortcuts.forEach((def) => {
-            const triggers = this.props.shortcutManager.getTriggersForShortcut(def.id);
-            let shortcutNamesList = triggers.map(trigger => `${trigger.name}$`);
-
-            autoReplaceAfters = autoReplaceAfters.concat(shortcutNamesList);
+            promises.push(this.props.shortcutManager.getTriggersForShortcut(def.id).then((triggers) => {
+                let shortcutNamesList = triggers.map(trigger => `${trigger.name}$`);
+                autoReplaceAfters = autoReplaceAfters.concat(shortcutNamesList);    
+            }));
         });
+
         placeholderShortcuts.forEach((def) => {
-            const triggers = this.props.shortcutManager.getTriggersForShortcut(def.id);
-            const shortcutNamesList = triggers.map(trigger => `<${trigger.name.slice(1)}>`);
-
-            autoReplaceAfters = autoReplaceAfters.concat(shortcutNamesList);
+            promises.push(this.props.shortcutManager.getTriggersForShortcut(def.id).then((triggers) => {
+                const shortcutNamesList = triggers.map(trigger => `<${trigger.name.slice(1)}>`);
+                autoReplaceAfters = autoReplaceAfters.concat(shortcutNamesList);    
+            }));
         });
-        this.autoReplaceBeforeRegExp = new RegExp("(" + autoReplaceAfters.join("|") + ")", 'i');
+        Promise.all(promises).then((r) => {
+            this.autoReplaceBeforeRegExp = new RegExp("(" + autoReplaceAfters.join("|") + ")", 'i');
 
-        // now add an AutoReplace plugin instance for each shortcut we're supporting as well
-        // can switch to the commented out trigger to support non-space characters but need to put
-        // character used instead of always space when inserting the structured field.
-        this.plugins.push(AutoReplace({
-            "trigger": /[\s\r\n.!?;,)}\]]/,
-            // "trigger": 'space',
-            "before": this.autoReplaceBeforeRegExp,
-            "transform": this.autoReplaceTransform.bind(this, null)
-        }));
+            // now add an AutoReplace plugin instance for each shortcut we're supporting as well
+            // can switch to the commented out trigger to support non-space characters but need to put
+            // character used instead of always space when inserting the structured field.
+            this.plugins.push(AutoReplace({
+                "trigger": /[\s\r\n.!?;,)}\]]/,
+                // "trigger": 'space',
+                "before": this.autoReplaceBeforeRegExp,
+                "transform": this.autoReplaceTransform.bind(this, null)
+            }));    
+        });
 
         // let's see if we have any regular expression shortcuts
         let triggerRegExp;
@@ -308,7 +311,7 @@ class FluxNotesEditor extends React.Component {
             return this.insertPlainText(transform, shortcutTrigger);
         }
 
-        let shortcut = this.props.newCurrentShortcut(shortcutC, shortcutTrigger, text, updatePatient, source);
+        let shortcut = this.props.newCurrentShortcut(shortcutC, shortcutTrigger.startsWith("#") ? shortcutTrigger.substring(1) : shortcutTrigger, undefined, updatePatient, source);
         shortcut.initialContextPosition = initialContextPosition;
         if (!Lang.isNull(shortcut) && shortcut.needToSelectValueFromMultipleOptions() && text.length === 0) {
             return this.openPortalToSelectValueForShortcut(shortcut, false, transform);
@@ -1397,80 +1400,83 @@ class FluxNotesEditor extends React.Component {
             remainder = remainder.split('<div>').join('');
         }
 
-        console.log("insertTextWithStructuredPhrases", textToBeInserted);
-        const triggers = this.noteParser.getListOfTriggersFromText(textToBeInserted)[0];
-        let pickListCount = 0;
+//        console.log("insertTextWithStructuredPhrases", textToBeInserted);
+        this.noteParser.getListOfTriggersFromText(textToBeInserted)[0].then((triggers) => {
+//            console.log(triggers);
+            let pickListCount = 0;
 
-        if (!Lang.isNull(triggers)) {
-            triggers.forEach((trigger) => {
-
-                start = remainder.indexOf(trigger.trigger);
-                if (start > 0) {
-                    before = remainder.substring(0, start);
-                    transform = this.insertPlainText(transform, before);
-                }
-                remainder = remainder.substring(start + trigger.trigger.length);
-
-                // // FIXME: Temporary work around that adds spaces when needed to @-phrases inserted via mic
-                // if (start !== 0 && trigger.trigger.startsWith('@') && !before.endsWith(' ')) {
-                //     transform = this.insertPlainText(transform, ' ');
-                // }
-
-                // Deals with @condition phrases inserted via data summary panel buttons. 
-                if (remainder.startsWith("[[")) {
-                    end = remainder.indexOf("]]");
-                    after = remainder.substring(2, end);
-                    // FIXME: 2 is a magic number based on [[ length, ditto for 2 below for ]]
-                    remainder = remainder.substring(end + 2);
-                    // If there were brackets, but nothing in the brackets, add a space to be inserted, otherwise pulls current data.
-                    if (after.length === 0) {
-                        after = ' ';
+            if (!Lang.isNull(triggers)) {
+                triggers.forEach((trigger) => {
+                    if (!Lang.isNull(trigger)) {
+                        // console.log(trigger, remainder);
+                        start = remainder.indexOf(trigger.trigger);
+                        if (start > 0) {
+                            before = remainder.substring(0, start);
+                            transform = this.insertPlainText(transform, before);
+                        }
+                        remainder = remainder.substring(start + trigger.trigger.length);
+        
+                        // // FIXME: Temporary work around that adds spaces when needed to @-phrases inserted via mic
+                        // if (start !== 0 && trigger.trigger.startsWith('@') && !before.endsWith(' ')) {
+                        //     transform = this.insertPlainText(transform, ' ');
+                        // }
+        
+                        // Deals with @condition phrases inserted via data summary panel buttons. 
+                        if (remainder.startsWith("[[")) {
+                            end = remainder.indexOf("]]");
+                            after = remainder.substring(2, end);
+                            // FIXME: 2 is a magic number based on [[ length, ditto for 2 below for ]]
+                            remainder = remainder.substring(end + 2);
+                            // If there were brackets, but nothing in the brackets, add a space to be inserted, otherwise pulls current data.
+                            if (after.length === 0) {
+                                after = ' ';
+                            }
+                            // FIXME: Temporary work around that can parse '@condition's inserted via mic with extraneous space
+                        } else if (remainder.startsWith(" [[")) {
+                            remainder = remainder.replace(/\s+(\[\[\S*\s*.*)/g, '$1');
+                            end = remainder.indexOf("]]");
+                            // FIXME: 2 is a magic number based on ' [[' length, ditto for 2 below for ]]
+                            after = remainder.charAt(2).toUpperCase() + remainder.substring(3, end);
+                            remainder = remainder.substring(end + 2);
+                        } else {
+                            after = "";
+                        }
+        
+                        // Update the context position based on selection
+                        const shortcutsUntilSelection = this.getContextsBeforeSelection(transform.state);
+                        if (arrayOfPickLists && this.noteParser.isPickList(trigger) && !trigger.selectedValue) {
+                            transform = this.updateExistingShortcut(arrayOfPickLists[pickListCount].shortcut, transform, shortcutsUntilSelection.length);
+                            pickListCount++;
+                        } else {
+                            transform = this.insertShortcut(trigger.definition, trigger.trigger, after, transform, updatePatient, source, shortcutsUntilSelection.length);
+                            this.adjustActiveContexts(transform.state.selection, transform.state); // Updates active contexts based on cursor position
+                        }
                     }
-                    // FIXME: Temporary work around that can parse '@condition's inserted via mic with extraneous space
-                } else if (remainder.startsWith(" [[")) {
-                    remainder = remainder.replace(/\s+(\[\[\S*\s*.*)/g, '$1');
-                    end = remainder.indexOf("]]");
-                    // FIXME: 2 is a magic number based on ' [[' length, ditto for 2 below for ]]
-                    after = remainder.charAt(2).toUpperCase() + remainder.substring(3, end);
-                    remainder = remainder.substring(end + 2);
-                } else {
-                    after = "";
-                }
+                });
+            }    
+            if (!Lang.isUndefined(remainder) && remainder.length > 0) {
+                transform = this.insertPlainText(transform, remainder);
+            }
+            const state = transform.apply();
 
-                // Update the context position based on selection
-                const shortcutsUntilSelection = this.getContextsBeforeSelection(transform.state);
-                if (arrayOfPickLists && this.noteParser.isPickList(trigger) && !trigger.selectedValue) {
-                    transform = this.updateExistingShortcut(arrayOfPickLists[pickListCount].shortcut, transform, shortcutsUntilSelection.length);
-                    pickListCount++;
-                } else {
-                    transform = this.insertShortcut(trigger.definition, trigger.trigger, after, transform, updatePatient, source, shortcutsUntilSelection.length);
-                    this.adjustActiveContexts(transform.state.selection, transform.state); // Updates active contexts based on cursor position
-                }
-            });
-        }
-        if (!Lang.isUndefined(remainder) && remainder.length > 0) {
-            transform = this.insertPlainText(transform, remainder);
-        }
-
-        const state = transform.apply();
-
-        // When a note is being loaded, scroll to structured data if user opened note using `Open Source Note` action
-        if (source === 'loaded note' && this.props.openSourceNoteEntryId) {
-            this.setState({ state }, () => {
-                const shortcutKey = this.structuredFieldMapManager.getKeyFromEntryId(this.props.openSourceNoteEntryId);
-
-                if (shortcutKey) {
-                    setTimeout(() => {
-                        this.scrollToData(state.document, shortcutKey)
-                        this.props.setOpenSourceNoteEntryId(null);
-                    }, 0);
-                }
-            });
-        } else {
-            this.setState({ state }, () => {
-                if (source === 'paste') this.scrollToAnchorElement();
-            });
-        }
+            // When a note is being loaded, scroll to structured data if user opened note using `Open Source Note` action
+            if (source === 'loaded note' && this.props.openSourceNoteEntryId) {
+                this.setState({ state }, () => {
+                    const shortcutKey = this.structuredFieldMapManager.getKeyFromEntryId(this.props.openSourceNoteEntryId);
+    
+                    if (shortcutKey) {
+                        setTimeout(() => {
+                            this.scrollToData(state.document, shortcutKey)
+                            this.props.setOpenSourceNoteEntryId(null);
+                        }, 0);
+                    }
+                });
+            } else {
+                this.setState({ state }, () => {
+                    if (source === 'paste') this.scrollToAnchorElement();
+                });
+            }
+        });
     }
 
     /**
@@ -1481,70 +1487,74 @@ class FluxNotesEditor extends React.Component {
         let remainder = contextTrayItem;
         let start, end;
         let localArrayOfPickLists = [];
-        console.log("insertContextTrayItem", contextTrayItem);
-        const triggers = this.noteParser.getListOfTriggersFromText(contextTrayItem)[0];
-        console.log(triggers);
-
-        // Loop through shortcut triggers to determine if any of them require users to choose from pick list
-        if (!Lang.isNull(triggers)) {
-            triggers.forEach((trigger) => {
-                console.log(trigger);
-                start = remainder.indexOf(trigger.trigger);
-                remainder = remainder.substring(start + trigger.trigger.length);
-
-                // Check if the shortcut is a pick list. If it is a pick list, check if it already has an option selected
-                // If no option is selected, then push the shortcut to the array
-                if (this.noteParser.isPickList(trigger) && !(remainder.startsWith("[["))) {
-                    localArrayOfPickLists.push(trigger);
-                }
-
-                if (remainder.startsWith("[[")) {
-                    end = remainder.indexOf("]]");
-                    // FIXME: 2 is a magic number based on [[ length, ditto for 2 below for ]]
-                    remainder = remainder.substring(end + 2);
-                }
-            });
-        }
-
-        // Build array of pick lists and store options for each pick list
-        if (localArrayOfPickLists.length > 0) {
-            let localArrayOfPickListsWithOptions = [];
-            let shortcutOptions = [];
-
-            localArrayOfPickLists.forEach((pickList) => {
-                // Create shortcut from trigger to be inserted before selection chosen. Also uses to get shortcutOptions.
-                let shortcut = this.props.shortcutManager.createShortcut(pickList.definition, pickList.trigger, this.props.patient, '', false);
-                shortcut.setSource("pick list/template");
-                shortcut.initialize(this.props.contextManager, pickList.trigger, false);
-
-                shortcutOptions = shortcut.getValueSelectionOptions();
-                localArrayOfPickListsWithOptions.push(
-                    {
-                        'trigger': pickList.trigger,
-                        'options': shortcutOptions,
-                        'shortcut': shortcut
+        // console.log("insertContextTrayItem", contextTrayItem);
+        this.noteParser.getListOfTriggersFromText(contextTrayItem)[0].then((triggers) => {
+            // console.log(triggers);
+            // Loop through shortcut triggers to determine if any of them require users to choose from pick list
+            if (!Lang.isNull(triggers)) {
+                triggers.forEach((trigger) => {
+                    if (!Lang.isNull(trigger)) {
+                        // console.log(trigger);
+                        start = remainder.indexOf(trigger.trigger);
+                        remainder = remainder.substring(start + trigger.trigger.length);
+    
+                        // Check if the shortcut is a pick list. If it is a pick list, check if it already has an option selected
+                        // If no option is selected, then push the shortcut to the array
+                        if (this.noteParser.isPickList(trigger) && !(remainder.startsWith("[["))) {
+                            localArrayOfPickLists.push(trigger);
+                        }
+    
+                        if (remainder.startsWith("[[")) {
+                            end = remainder.indexOf("]]");
+                            // FIXME: 2 is a magic number based on [[ length, ditto for 2 below for ]]
+                            remainder = remainder.substring(end + 2);
+                        }
                     }
-                )
-            });
+                });
+            }
 
-            this.props.handleUpdateArrayOfPickLists(localArrayOfPickListsWithOptions);
-            this.props.setNoteViewerEditable(false);
-            // Switch note assistant view to the pick list options panel
-            this.props.updateNoteAssistantMode('pick-list-options-panel');
-            // Insert content by default
-            this.insertTextWithStructuredPhrases(contextTrayItem, undefined, true, "Picklist", localArrayOfPickListsWithOptions);
-        } else { // If the text to be inserted does not contain any pick lists, insert the text
-            this.insertTextWithStructuredPhrases(contextTrayItem, undefined, true, "Shortcuts in Context");
-            this.props.updateContextTrayItemToInsert(null);
-            this.props.updateNoteAssistantMode('context-tray');
-        }
+            // Build array of pick lists and store options for each pick list
+            if (localArrayOfPickLists.length > 0) {
+                let localArrayOfPickListsWithOptions = [];
+                let shortcutOptions = [];
+
+                localArrayOfPickLists.forEach((pickList) => {
+                    // Create shortcut from trigger to be inserted before selection chosen. Also uses to get shortcutOptions.
+                    let shortcut = this.props.shortcutManager.createShortcut(pickList.definition, pickList.trigger, this.props.patient, '', false);
+                    shortcut.setSource("pick list/template");
+                    shortcut.initialize(this.props.contextManager, pickList.trigger, false);
+
+                    shortcutOptions = shortcut.getValueSelectionOptions();
+                    localArrayOfPickListsWithOptions.push(
+                        {
+                            'trigger': pickList.trigger,
+                            'options': shortcutOptions,
+                            'shortcut': shortcut
+                        }
+                    )
+                });
+
+                this.props.handleUpdateArrayOfPickLists(localArrayOfPickListsWithOptions);
+                this.props.setNoteViewerEditable(false);
+                // Switch note assistant view to the pick list options panel
+                this.props.updateNoteAssistantMode('pick-list-options-panel');
+                // Insert content by default
+                this.insertTextWithStructuredPhrases(contextTrayItem, undefined, true, "Picklist", localArrayOfPickListsWithOptions);
+            } else { // If the text to be inserted does not contain any pick lists, insert the text
+                this.insertTextWithStructuredPhrases(contextTrayItem, undefined, true, "Shortcuts in Context");
+                this.props.updateContextTrayItemToInsert(null);
+                this.props.updateNoteAssistantMode('context-tray');
+            }
+        });
     }
 
     /**
      * Check if shortcutTrigger is a shortcut trigger in the list of currently valid shortcuts
      * or if the shortcutTrigger matches the shortcut's regexpTrigger
+     * returns true if trigger is valid within current context, false if it is not
      */
     shortcutTriggerCheck = (shortcutC, shortcutTrigger) => {
+        return true;
         // Check regexpTrigger before checking currently valid shortcuts
         if (!Lang.isNull(shortcutC) && !Lang.isUndefined(shortcutC.regexpTrigger) && !Lang.isNull(shortcutC.regexpTrigger)) {
             const regexpTrigger = new RegExp(shortcutC.regexpTrigger);

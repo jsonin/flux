@@ -80,16 +80,26 @@ class FluxConditionPresentAssertion extends FluxEntry {
             this._condition.findingTopicCode = null;
             return;
         }
-        this.code = codeObject.code;
-        this.codeSystem = codeObject.codeSystem;
-        if (!this._condition.findingTopicCode.value.coding[0].displayText) this._condition.findingTopicCode.value.coding[0].displayText = new DisplayText();
-        this._condition.findingTopicCode.value.coding[0].displayText.value = codeObject.label;
+        if (codeObject.code) {
+            this.code = codeObject.code;
+            this.codeSystem = codeObject.codeSystem;
+            if (!this._condition.findingTopicCode.value.coding[0].displayText) this._condition.findingTopicCode.value.coding[0].displayText = new DisplayText();
+            this._condition.findingTopicCode.value.coding[0].displayText.value = codeObject.label;
+        } else {
+            this._initCoding();
+            if (!this._condition.findingTopicCode.value.coding[0].displayText) this._condition.findingTopicCode.value.coding[0].displayText = new DisplayText();
+            this._condition.findingTopicCode.value.coding[0].displayText.value = codeObject;
+        }
     }
 
-    set code(newCode) {
+    _initCoding() {
         if (!this._condition.findingTopicCode) this._condition.findingTopicCode = new FindingTopicCode();
         if (!this._condition.findingTopicCode.value) this._condition.findingTopicCode.value = new CodeableConcept();
         if (!this._condition.findingTopicCode.value.coding) this._condition.findingTopicCode.value.coding = [ new Coding() ];
+    }
+
+    set code(newCode) {
+        this._initCoding();
         if (!this._condition.findingTopicCode.value.coding[0].code) this._condition.findingTopicCode.value.coding[0].code = new Code();
         this._condition.findingTopicCode.value.coding[0].code.value = newCode;
     }

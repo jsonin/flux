@@ -66,7 +66,6 @@ export default class CreatorChildService extends Shortcut {
             text = text.substring(prefix.length);
         }
         this.text = text;
-        console.log(this.parentContext);
         if (!Lang.isUndefined(this.parentContext)) {
             console.log(this.parentContext, this.metadata.parentAttribute, text);
             this.parentContext.setAttributeValue(this.metadata.parentAttribute, text, false, updatePatient);

@@ -30,7 +30,6 @@ export default class NoteParser {
 
         // build up all trigger string regular expression
         //let allTriggers = this.shortcutManager.getAllStringTriggers();
-        //console.log(allTriggers);
         let allShortcuts = this.shortcutManager.getAllShortcutDefinitions();
 
         //this.allStringTriggersRegExp = new RegExp("(" + allTriggers.join("|") + ")", 'i');
@@ -39,21 +38,16 @@ export default class NoteParser {
         this.allTriggersRegExps = [];
         let regexp; //, stringTriggers;
         allShortcuts.forEach((def) => {
-            console.log(def);
             regexp = def.regexpTrigger;
             if (regexp) {
-                console.log("**REGEXP", regexp);
                 this.allTriggersRegExps.push({regexp: regexp, definition: def});
             }
             this.shortcutManager.getTriggersForShortcut(def.id).then((stringTriggers) => {
                 if (stringTriggers.length > 0) {
-                    //console.log(stringTriggers);
                     regexp = new RegExp("(" + stringTriggers.map((re) => re.name).join("|") + ")", 'i');
-                    console.log("stringTriggers", regexp);
                     this.allTriggersRegExps.push({regexp: regexp, definition: def});
                 }
                 if (def.type === "CreatorChildService") {
-                    console.log("************service");
                     this.allTriggersRegExps.push({definition: def});
                 }
             });
@@ -100,15 +94,15 @@ export default class NoteParser {
     }
 
     handleServiceSearches = (parts, index, matches, tocheck, result) => {
-        console.log(result);
         if (result.length > 0) {
-            matches.push({definition: tocheck.definition, trigger: result[0]});
+            return {definition: tocheck.definition, trigger: result[0].name};
         } else {
-            index++;
-            if (index <= parts.length) {
-                let searchFor = parts.slice(0, index)
-                this.shortcutManager.getTriggersForShortcut(tocheck.definition.id, undefined, searchFor).then(this.handleServiceSearches.bind(this, parts, index, matches, tocheck));
-            }
+            return null;
+            // index++;
+            // if (index <= parts.length) {
+            //     let searchFor = parts.slice(0, index)
+            //     return this.shortcutManager.getTriggersForShortcut(tocheck.definition.id, undefined, searchFor).then(this.handleServiceSearches.bind(this, parts, index, matches, tocheck));
+            // }
         }
     }
 
@@ -132,8 +126,35 @@ export default class NoteParser {
         let matches = [];
         let match, substr, nextPos, found;
         let hashPos = this.getNextTriggerIndex(note, triggerChars, pos);
+        const checkRegularExpression = (tocheck) => {
+            if (tocheck.regexp) {
+                match = substr.match(tocheck.regexp);
+                if (!Lang.isNull(match)) {
+                    let possibleValue = substr.substring(match[0].length);
+                    let selectedValue = null;
+    
+                        // Check if the shortcut is an inserter (check for '[['). If it is, grab the selected value
+                    if (possibleValue.startsWith("[[")) {
+                        let posOfEndBrackets = possibleValue.indexOf("]]");
+                        selectedValue = possibleValue.substring(2, posOfEndBrackets);
+                    }
+                    matches.push(new Promise(function(resolve, reject) {
+                        resolve({trigger: match[0], definition: tocheck.definition, selectedValue: selectedValue});
+                    }));
+                    found = true;
+                }
+            } else {
+                // service shortcut
+                // just send first word of substr and then find longest matching trigger value returned that matches the start of substr
+                // then will have to do the above and return a promise
+
+                let parts = substr.split(" ");
+                let index = 1;
+                matches.push(this.shortcutManager.getTriggersForShortcut(tocheck.definition.id, undefined, substr.substring(1)) //parts[0].substring(1))
+                    .then(this.handleServiceSearches.bind(this, parts, index, matches, tocheck)));
+            }
+        };
         while (hashPos !== -1) {
-            //console.log(hashPos);
             nextPos = this.getNextTriggerIndex(note, triggerChars, hashPos + 1);
             if (nextPos === -1) {
                 substr = note.substring(hashPos);
@@ -141,36 +162,7 @@ export default class NoteParser {
                 substr = note.substring(hashPos, nextPos);
             }
             found = false;
-            this.allTriggersRegExps.forEach((tocheck) => {
-                if (tocheck.regexp) {
-                    match = substr.match(tocheck.regexp);
-                    if (!Lang.isNull(match)) {
-                        console.log("matched " + tocheck.regexp);
-                        let possibleValue = substr.substring(match[0].length);
-                        let selectedValue = null;
-        
-                            // Check if the shortcut is an inserter (check for '[['). If it is, grab the selected value
-                        if (possibleValue.startsWith("[[")) {
-                            let posOfEndBrackets = possibleValue.indexOf("]]");
-                            selectedValue = possibleValue.substring(2, posOfEndBrackets);
-                        }
-                        matches.push(new Promise(function(resolve, reject) {
-                            resolve({trigger: match[0], definition: tocheck.definition, selectedValue: selectedValue});
-                        }));
-                        found = true;
-                    }
-                } else {
-                    // service shortcut
-                    // just send first word of substr and then find longest matching trigger value returned that matches the start of substr
-                    // then will have to do the above and return a promise
-    
-                    let parts = substr.split(" ");
-                    let index = 1;
-                    console.log(parts);
-                    matches.push(this.shortcutManager.getTriggersForShortcut(tocheck.definition.id, undefined, parts[0])
-                        .then(this.handleServiceSearches.bind(this, parts, index, matches, tocheck)));
-                }
-            });
+            this.allTriggersRegExps.forEach(checkRegularExpression);
             if (!found) {
                 unrecognizedTriggers.push(substr);
             }
