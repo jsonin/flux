@@ -71,7 +71,7 @@ class FluxConditionPresentAssertion extends FluxEntry {
     }
 
     get code() {
-        if (!this._condition.findingTopicCode || !this._condition.findingTopicCode.value) return null;
+        if (!this._condition.findingTopicCode || !this._condition.findingTopicCode.value || !this._condition.findingTopicCode.value.coding[0] || !this._condition.findingTopicCode.value.coding[0].codeSystem) return null;
         return this._condition.findingTopicCode.value.coding[0].code.value;
     }
 
@@ -105,14 +105,12 @@ class FluxConditionPresentAssertion extends FluxEntry {
     }
 
     get codeSystem() {
-        if (!this._condition.findingTopicCode || !this._condition.findingTopicCode.value) return null;
+        if (!this._condition.findingTopicCode || !this._condition.findingTopicCode.value || !this._condition.findingTopicCode.value.coding[0] || !this._condition.findingTopicCode.value.coding[0].codeSystem) return null;
         return this._condition.findingTopicCode.value.coding[0].codeSystem.value;
     }
 
     set codeSystem(newCodeSystem) {
-        if (!this._condition.findingTopicCode) this._condition.findingTopicCode = new FindingTopicCode();
-        if (!this._condition.findingTopicCode.value) this._condition.findingTopicCode.value = new CodeableConcept();
-        if (!this._condition.findingTopicCode.value.coding) this._condition.findingTopicCode.value.coding = [ new Coding() ];
+        this._initCoding();
         if (!this._condition.findingTopicCode.value.coding[0].codeSystem) this._condition.findingTopicCode.value.coding[0].codeSystem = new CodeSystem();
         this._condition.findingTopicCode.value.coding[0].codeSystem.value = newCodeSystem;
     }

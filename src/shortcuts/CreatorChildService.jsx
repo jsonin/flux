@@ -43,7 +43,6 @@ export default class CreatorChildService extends Shortcut {
         let result = super.onBeforeDeleted();
         if (result && !Lang.isUndefined(this.parentContext)) {
             if (this.metadata["subtype"] && this.metadata["subtype"] === "list") {
-                //console.log("onBeforeDeleted of a list item");
                 const parentAttributeName = this.metadata.parentAttribute;
                 let currentList = this.parentContext.getAttributeValue(parentAttributeName);
                 let oneToDelete = this.text;
@@ -60,14 +59,12 @@ export default class CreatorChildService extends Shortcut {
     }
 
     setText(text, updatePatient = true) {
-        console.log("setText", text);
         const prefix = this.getPrefixCharacter();
         if (text.startsWith(prefix)) {
             text = text.substring(prefix.length);
         }
         this.text = text;
         if (!Lang.isUndefined(this.parentContext)) {
-            console.log(this.parentContext, this.metadata.parentAttribute, text);
             this.parentContext.setAttributeValue(this.metadata.parentAttribute, text, false, updatePatient);
         }
     }
