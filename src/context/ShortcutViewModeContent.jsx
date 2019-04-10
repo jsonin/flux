@@ -50,6 +50,7 @@ export default class ShortcutViewModeContent extends Component {
     }
 
     handleShortcutClick = (shortcut) => {
+        console.log(shortcut);
         this.props.onShortcutClicked(shortcut); // + shortcut.substring(0, 1)); no longer need trailing @ or #
     }
 

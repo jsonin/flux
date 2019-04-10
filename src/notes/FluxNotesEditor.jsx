@@ -1410,46 +1410,48 @@ class FluxNotesEditor extends React.Component {
                     if (!Lang.isNull(trigger)) {
                         // console.log(trigger, remainder);
                         start = remainder.indexOf(trigger.trigger);
-                        if (start > 0) {
-                            before = remainder.substring(0, start);
-                            transform = this.insertPlainText(transform, before);
-                        }
-                        remainder = remainder.substring(start + trigger.trigger.length);
-        
-                        // // FIXME: Temporary work around that adds spaces when needed to @-phrases inserted via mic
-                        // if (start !== 0 && trigger.trigger.startsWith('@') && !before.endsWith(' ')) {
-                        //     transform = this.insertPlainText(transform, ' ');
-                        // }
-        
-                        // Deals with @condition phrases inserted via data summary panel buttons. 
-                        if (remainder.startsWith("[[")) {
-                            end = remainder.indexOf("]]");
-                            after = remainder.substring(2, end);
-                            // FIXME: 2 is a magic number based on [[ length, ditto for 2 below for ]]
-                            remainder = remainder.substring(end + 2);
-                            // If there were brackets, but nothing in the brackets, add a space to be inserted, otherwise pulls current data.
-                            if (after.length === 0) {
-                                after = ' ';
+                        if (start > -1) {
+                            if (start > 0) {
+                                before = remainder.substring(0, start);
+                                transform = this.insertPlainText(transform, before);
                             }
-                            // FIXME: Temporary work around that can parse '@condition's inserted via mic with extraneous space
-                        } else if (remainder.startsWith(" [[")) {
-                            remainder = remainder.replace(/\s+(\[\[\S*\s*.*)/g, '$1');
-                            end = remainder.indexOf("]]");
-                            // FIXME: 2 is a magic number based on ' [[' length, ditto for 2 below for ]]
-                            after = remainder.charAt(2).toUpperCase() + remainder.substring(3, end);
-                            remainder = remainder.substring(end + 2);
-                        } else {
-                            after = "";
-                        }
-        
-                        // Update the context position based on selection
-                        const shortcutsUntilSelection = this.getContextsBeforeSelection(transform.state);
-                        if (arrayOfPickLists && this.noteParser.isPickList(trigger) && !trigger.selectedValue) {
-                            transform = this.updateExistingShortcut(arrayOfPickLists[pickListCount].shortcut, transform, shortcutsUntilSelection.length);
-                            pickListCount++;
-                        } else {
-                            transform = this.insertShortcut(trigger.definition, trigger.trigger, after, transform, updatePatient, source, shortcutsUntilSelection.length);
-                            this.adjustActiveContexts(transform.state.selection, transform.state); // Updates active contexts based on cursor position
+                            remainder = remainder.substring(start + trigger.trigger.length);
+            
+                            // // FIXME: Temporary work around that adds spaces when needed to @-phrases inserted via mic
+                            // if (start !== 0 && trigger.trigger.startsWith('@') && !before.endsWith(' ')) {
+                            //     transform = this.insertPlainText(transform, ' ');
+                            // }
+            
+                            // Deals with @condition phrases inserted via data summary panel buttons. 
+                            if (remainder.startsWith("[[")) {
+                                end = remainder.indexOf("]]");
+                                after = remainder.substring(2, end);
+                                // FIXME: 2 is a magic number based on [[ length, ditto for 2 below for ]]
+                                remainder = remainder.substring(end + 2);
+                                // If there were brackets, but nothing in the brackets, add a space to be inserted, otherwise pulls current data.
+                                if (after.length === 0) {
+                                    after = ' ';
+                                }
+                                // FIXME: Temporary work around that can parse '@condition's inserted via mic with extraneous space
+                            } else if (remainder.startsWith(" [[")) {
+                                remainder = remainder.replace(/\s+(\[\[\S*\s*.*)/g, '$1');
+                                end = remainder.indexOf("]]");
+                                // FIXME: 2 is a magic number based on ' [[' length, ditto for 2 below for ]]
+                                after = remainder.charAt(2).toUpperCase() + remainder.substring(3, end);
+                                remainder = remainder.substring(end + 2);
+                            } else {
+                                after = "";
+                            }
+            
+                            // Update the context position based on selection
+                            const shortcutsUntilSelection = this.getContextsBeforeSelection(transform.state);
+                            if (arrayOfPickLists && this.noteParser.isPickList(trigger) && !trigger.selectedValue) {
+                                transform = this.updateExistingShortcut(arrayOfPickLists[pickListCount].shortcut, transform, shortcutsUntilSelection.length);
+                                pickListCount++;
+                            } else {
+                                transform = this.insertShortcut(trigger.definition, trigger.trigger, after, transform, updatePatient, source, shortcutsUntilSelection.length);
+                                this.adjustActiveContexts(transform.state.selection, transform.state); // Updates active contexts based on cursor position
+                            }
                         }
                     }
                 });
@@ -1496,18 +1498,20 @@ class FluxNotesEditor extends React.Component {
                     if (!Lang.isNull(trigger)) {
                         // console.log(trigger);
                         start = remainder.indexOf(trigger.trigger);
-                        remainder = remainder.substring(start + trigger.trigger.length);
+                        if (start > -1) {
+                            remainder = remainder.substring(start + trigger.trigger.length);
     
-                        // Check if the shortcut is a pick list. If it is a pick list, check if it already has an option selected
-                        // If no option is selected, then push the shortcut to the array
-                        if (this.noteParser.isPickList(trigger) && !(remainder.startsWith("[["))) {
-                            localArrayOfPickLists.push(trigger);
-                        }
-    
-                        if (remainder.startsWith("[[")) {
-                            end = remainder.indexOf("]]");
-                            // FIXME: 2 is a magic number based on [[ length, ditto for 2 below for ]]
-                            remainder = remainder.substring(end + 2);
+                            // Check if the shortcut is a pick list. If it is a pick list, check if it already has an option selected
+                            // If no option is selected, then push the shortcut to the array
+                            if (this.noteParser.isPickList(trigger) && !(remainder.startsWith("[["))) {
+                                localArrayOfPickLists.push(trigger);
+                            }
+        
+                            if (remainder.startsWith("[[")) {
+                                end = remainder.indexOf("]]");
+                                // FIXME: 2 is a magic number based on [[ length, ditto for 2 below for ]]
+                                remainder = remainder.substring(end + 2);
+                            }
                         }
                     }
                 });

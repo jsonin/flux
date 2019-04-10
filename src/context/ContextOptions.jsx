@@ -18,7 +18,7 @@ export default class ContextOptions extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.context !== this.props.context) {
+        if (nextProps.context !== this.props.context || nextProps.searchString !== this.props.searchString) {
             this.newContext();
         }
     }
