@@ -31,7 +31,7 @@ class ContextPortal extends React.Component {
         const { openedPortal } = nextProps;
 
         if (openedPortal !== null && openedPortal !== this.portalId) return false;
-        
+
         return true;
     }
 
@@ -70,7 +70,11 @@ class ContextPortal extends React.Component {
      * When the portal opens, set flags appropriately and a decay timer for justActive
      */
     onOpen = (portal) => {
-        this.setState({ menu: portal.firstChild, active: true, justActive: true });
+        if (this.props.isGetHelp) {
+            this.setState({ selectedIndex: -1, menu: portal.firstChild, active: false, justActive: true });
+        } else {
+            this.setState({ menu: portal.firstChild, active: true, justActive: true });
+        }
         setTimeout(function(){ this.setState({ justActive: false }) }.bind(this), 100);
     }
     /* Called when user hits esc or clicks outside of portal
