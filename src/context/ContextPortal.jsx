@@ -64,13 +64,13 @@ class ContextPortal extends React.Component {
             active: false,
             justActive: false
         }
-        this.portalId = "ContextPortal";
+        this.portalId = 'ContextPortal';
     }
     /*
      * When the portal opens, set flags appropriately and a decay timer for justActive
      */
     onOpen = (portal) => {
-        this.setState({ menu: portal.firstChild, active: true, justActive: true })
+        this.setState({ menu: portal.firstChild, active: true, justActive: true });
         setTimeout(function(){ this.setState({ justActive: false }) }.bind(this), 100);
     }
     /* Called when user hits esc or clicks outside of portal
@@ -211,18 +211,18 @@ class ContextPortal extends React.Component {
             />
         );
     }
-    
+
     /*
      * View of the current menu
      */
     render = () => {
         const TYPE_LIST = 0;
         const TYPE_CALENDAR = 1;
-        const { contexts, openedPortal } = this.props;
+        const { contexts, openedPortal, isGetHelp } = this.props;
         let type;
         let className = "context-portal";
         if (Lang.isNull(contexts)) return null;
-        
+
         if (Lang.isArray(contexts)) {
             type = TYPE_LIST;
             className += " scrollable";
@@ -231,7 +231,7 @@ class ContextPortal extends React.Component {
         } else {
             console.error("unknown picker type: " + contexts);
         }
-    
+
         return (
             <Portal 
                 closeOnEsc 
@@ -254,6 +254,7 @@ ContextPortal.proptypes = {
     contextManager: PropTypes.object.isRequired,
     contexts: PropTypes.object,
     getPosition: PropTypes.func.isRequired,
+    isGetHelp: PropTypes.bool.isRequired,
     onChange: PropTypes.func.isRequired,
     openedPortal: PropTypes.string.isRequired,
     onSelected: PropTypes.func.isRequired,

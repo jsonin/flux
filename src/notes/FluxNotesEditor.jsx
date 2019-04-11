@@ -223,6 +223,7 @@ class FluxNotesEditor extends React.Component {
         this.state = {
             state: initialState,
             openedPortal: null,
+            isGetHelpPortal:null,
             portalOptions: null,
             isEditingNoteName: false,
             isFetchingAsyncData: false,
@@ -390,12 +391,26 @@ class FluxNotesEditor extends React.Component {
         let portalOptions = shortcut.getValueSelectionOptions();
 
         this.setState({
-            openedPortal: "ContextPortal",
+            openedPortal: 'ContextPortal',
             portalOptions: portalOptions,
-            needToDelete: needToDelete,
+			isGetHelpPortal: false,
+            needToDelete: needToDelete
         });
         this.selectingForShortcut = shortcut;
         return transform.blur();
+    }
+
+    openGetHelpPortal(shortcut, transform) {
+        // let portalOptions = shortcut.getValueSelectionOptions();
+
+        this.setState({
+            openedPortal: 'ContextPortal',
+            portalOptions: [{key: 'Get Help', context: 'Get Help'}],
+            isGetHelpPortal: true,
+            needToDelete: false
+        });
+        // this.selectingForShortcut = shortcut;
+        return transform; // figure out how to make portal out of focus
     }
 
     // called from portal when an item is selected (selection is not null) or if portal is closed without
@@ -488,6 +503,15 @@ class FluxNotesEditor extends React.Component {
             && selection.focusOffset === focusNode.text.length
         ) {
             transform = transform.collapseToStartOf(anchorNode);
+        }
+
+        const previousNode = state.document.getPreviousSibling(selection.anchorKey);
+        if (previousNode && previousNode.type === 'structured_field') {
+            const previousShortcut = previousNode.data.get('shortcut');
+            // TO DO CHECK IF IN CONTEXT
+            if (!previousShortcut.isComplete) {
+                transform = this.openGetHelpPortal(previousShortcut, transform);
+            }
         }
 
         this.setState({ state: transform.apply() });
@@ -1921,6 +1945,7 @@ class FluxNotesEditor extends React.Component {
                         contextManager={this.contextManager}
                         contexts={this.state.portalOptions}
                         getPosition={this.getTextCursorPosition}
+                        isGetHelp={this.state.isGetHelpPortal}
                         onChange={this.onChange}
                         openedPortal={this.state.openedPortal}
                         onSelected={this.onPortalSelection}
