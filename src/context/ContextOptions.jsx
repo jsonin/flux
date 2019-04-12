@@ -15,8 +15,8 @@ export default class ContextOptions extends Component {
             tooltipVisibility: 'visible',
             triggers: []
         }
+        this.props.contextManager.subscribe(this, this.newContext);
         this._isMounted = false;
-        //this.newContext();
     }
 
     componentDidMount() {
@@ -34,10 +34,10 @@ export default class ContextOptions extends Component {
         }
     }
 
-    handleClick = (e, i) => {
+    handleClick = (e, trigger) => {
         e.preventDefault();
         this.setState({ searchString: "", tooltipVisibility: 'hidden' });
-        this.props.handleClick(i);
+        this.props.handleClick(trigger);
     }
 
     handleSearch = (value) => {

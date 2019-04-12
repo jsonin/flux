@@ -89,14 +89,16 @@ export default class Context {
     updateContextStatus() {
         if (this.contextManager) {
             const shouldBeInContext = this.shouldBeInContext();
-            if (this.isInContext === shouldBeInContext) return;
-            if (shouldBeInContext) { // put in contextManager
-                this.contextManager.addShortcutToContext(this);
-                this.isInContext = true;
-            } else { // take out of contextManager
-                this.contextManager.removeShortcutFromContext(this);
-                this.isInContext = false;
+            if (this.isInContext !== shouldBeInContext) {
+                if (shouldBeInContext) { // put in contextManager
+                    this.contextManager.addShortcutToContext(this);
+                    this.isInContext = true;
+                } else { // take out of contextManager
+                    this.contextManager.removeShortcutFromContext(this);
+                    this.isInContext = false;
+                }
             }
+            this.contextManager.contextUpdated();
         }
     }
 

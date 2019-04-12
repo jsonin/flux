@@ -495,7 +495,6 @@ export class FullApp extends Component {
                                         loginUser={this.state.loginUser}
                                         preferenceManager={this.preferenceManager}
                                         newCurrentShortcut={this.newCurrentShortcut}
-                                        onContextUpdate={this.onContextUpdate}
                                         openSourceNoteEntryId={this.state.openSourceNoteEntryId}
                                         possibleClinicalEvents={this.possibleClinicalEvents}
                                         ref={(dashboard) => { this.dashboard = dashboard; }}

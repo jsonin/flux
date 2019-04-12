@@ -206,13 +206,9 @@ class FluxNotesEditor extends React.Component {
             triggerRegExp = def.regexpTrigger;
             if (!Lang.isNull(triggerRegExp) && !Lang.isUndefined(triggerRegExp)) {
                 // Modify regex to ensure this pattern only gets replaced if it's right before the cursor.
-                //console.log(triggerRegExp);
-                //const triggerRegExpModified = new RegExp(triggerRegExp.toString().replace(/\/(.*)\//, '$1$'));
                 const triggerRegExpModified = triggerRegExp;
-                //console.log(triggerRegExpModified);
                 this.plugins.push(AutoReplace({
                     "trigger": /[\s\r\n.!?;,)}\]]/,
-                    // "trigger": 'space',
                     "before": triggerRegExpModified,
                     "transform": this.autoReplaceTransform.bind(this, def)
                 }));
@@ -629,7 +625,7 @@ class FluxNotesEditor extends React.Component {
     }
 
     adjustActiveContexts = (selection, state) => {
-        this.contextManager.adjustActiveContexts((context) => {
+        const didChange = this.contextManager.adjustActiveContexts((context) => {
             // return true if context should be active because it's before selection
             // also need to make sure context is in current paragraph or global
             const isBeforeSelection = this.isBlock1BeforeBlock2(context.getKey(), 0, selection.endKey, selection.endOffset, state);
@@ -640,7 +636,9 @@ class FluxNotesEditor extends React.Component {
             }
             return false;
         });
-        this.contextManager.contextUpdated();
+        if (didChange) {
+            this.contextManager.contextUpdated();
+        }
     }
 
     updateStructuredFieldResetSelection = (shortcut, transform) => {
@@ -1400,15 +1398,12 @@ class FluxNotesEditor extends React.Component {
             remainder = remainder.split('<div>').join('');
         }
 
-//        console.log("insertTextWithStructuredPhrases", textToBeInserted);
         this.noteParser.getListOfTriggersFromText(textToBeInserted)[0].then((triggers) => {
-//            console.log(triggers);
             let pickListCount = 0;
 
             if (!Lang.isNull(triggers)) {
                 triggers.forEach((trigger) => {
                     if (!Lang.isNull(trigger)) {
-                        // console.log(trigger, remainder);
                         start = remainder.indexOf(trigger.trigger);
                         if (start > -1) {
                             if (start > 0) {
@@ -1491,39 +1486,36 @@ class FluxNotesEditor extends React.Component {
 
         const trigger = contextTrayItem;
 
-        if (!Lang.isNull(trigger)) {
+        const shortcutsUntilSelection = this.getContextsBeforeSelection(transform.state);
+        // Build array of pick lists and store options for each pick list
+        if (this.noteParser.isPickList(trigger)) {
 
-            const shortcutsUntilSelection = this.getContextsBeforeSelection(transform.state);
-            // Build array of pick lists and store options for each pick list
-            if (this.noteParser.isPickList(trigger)) {
+            // Create shortcut from trigger to be inserted before selection chosen. Also uses to get shortcutOptions.
+            let shortcut = this.props.shortcutManager.createShortcut(trigger.definition, trigger.name, this.props.patient, '', false);
+            shortcut.setSource("context tray");
+            shortcut.initialize(this.props.contextManager, trigger.name, false);
 
-                // Create shortcut from trigger to be inserted before selection chosen. Also uses to get shortcutOptions.
-                let shortcut = this.props.shortcutManager.createShortcut(trigger.definition, trigger.name, this.props.patient, '', false);
-                shortcut.setSource("context tray");
-                shortcut.initialize(this.props.contextManager, trigger.name, false);
+            const shortcutOptions = shortcut.getValueSelectionOptions();
 
-                const shortcutOptions = shortcut.getValueSelectionOptions();
+            this.props.handleUpdateArrayOfPickLists([ { "trigger": trigger.name, "options": shortcutOptions, "shortcut": shortcut }]);
+            this.props.setNoteViewerEditable(false);
+            // Switch note assistant view to the pick list options panel
+            this.props.updateNoteAssistantMode('pick-list-options-panel');
+            // Insert content by default
+            //this.insertTextWithStructuredPhrases(contextTrayItem, undefined, true, "Picklist", localArrayOfPickListsWithOptions);
 
-                this.props.handleUpdateArrayOfPickLists([ { "trigger": trigger.name, "options": shortcutOptions, "shortcut": shortcut }]);
-                this.props.setNoteViewerEditable(false);
-                // Switch note assistant view to the pick list options panel
-                this.props.updateNoteAssistantMode('pick-list-options-panel');
-                // Insert content by default
-                //this.insertTextWithStructuredPhrases(contextTrayItem, undefined, true, "Picklist", localArrayOfPickListsWithOptions);
+            // Update the context position based on selection
+            transform = this.updateExistingShortcut(shortcut, transform, shortcutsUntilSelection.length);
+        } else { // If the text to be inserted does not contain any pick lists, insert the text
+            //this.insertTextWithStructuredPhrases(contextTrayItem, undefined, true, "Shortcuts in Context");
+            transform = this.insertShortcut(trigger.definition, trigger.name, "", transform, true, "context tray", shortcutsUntilSelection.length);
+            this.adjustActiveContexts(transform.state.selection, transform.state); // Updates active contexts based on cursor position
 
-                // Update the context position based on selection
-                transform = this.updateExistingShortcut(shortcut, transform, shortcutsUntilSelection.length);
-            } else { // If the text to be inserted does not contain any pick lists, insert the text
-                //this.insertTextWithStructuredPhrases(contextTrayItem, undefined, true, "Shortcuts in Context");
-                transform = this.insertShortcut(trigger.definition, trigger.name, "", transform, true, "context tray", shortcutsUntilSelection.length);
-                this.adjustActiveContexts(transform.state.selection, transform.state); // Updates active contexts based on cursor position
-
-                this.props.updateContextTrayItemToInsert(null);
-                this.props.updateNoteAssistantMode('context-tray');
-            }
-            const state = transform.apply();
-            this.setState({ state });
+            this.props.updateContextTrayItemToInsert(null);
+            this.props.updateNoteAssistantMode('context-tray');
         }
+        const state = transform.apply();
+        this.setState({ state });
     }
 
     /**
@@ -1532,6 +1524,7 @@ class FluxNotesEditor extends React.Component {
      * returns true if trigger is valid within current context, false if it is not
      */
     shortcutTriggerCheck = (shortcutC, shortcutTrigger) => {
+        console.log("shortcutTriggerCheck", shortcutC, shortcutTrigger);
         return true;
         // Check regexpTrigger before checking currently valid shortcuts
         if (!Lang.isNull(shortcutC) && !Lang.isUndefined(shortcutC.regexpTrigger) && !Lang.isNull(shortcutC.regexpTrigger)) {
@@ -1820,7 +1813,6 @@ class FluxNotesEditor extends React.Component {
     
     render = () => {
         const CreatorsPortal = this.suggestionsPluginCreators.SuggestionPortal;
-        //const ServicesPortal = this.suggestionsPluginServices.SuggestionPortal;
         const InsertersPortal = this.suggestionsPluginInserters.SuggestionPortal;
         const PlaceholdersPortal = this.suggestionsPluginPlaceholders.SuggestionPortal;
         const disabledEditorClassName = this.props.isAppBlurred ? 'content-disabled' : '';
@@ -1893,13 +1885,6 @@ class FluxNotesEditor extends React.Component {
                         setOpenedPortal={this.setOpenedPortal}
                         state={this.state.state}
                     />
-                    {/* <ServicesPortal
-                        getPosition={this.getTextCursorPosition}
-                        openedPortal={this.state.openedPortal}
-                        portalId={"ServicesPortal"}
-                        setOpenedPortal={this.setOpenedPortal}
-                        state={this.state.state}
-                    /> */}
                     <InsertersPortal
                         getPosition={this.getTextCursorPosition}
                         openedPortal={this.state.openedPortal}

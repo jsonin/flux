@@ -255,7 +255,6 @@ ClinicianDashboard.propTypes = {
     loginUser: PropTypes.object.isRequired,
     preferenceManager: PropTypes.object.isRequired,
     newCurrentShortcut: PropTypes.func.isRequired,
-    onContextUpdate: PropTypes.func.isRequired,
     openSourceNoteEntryId: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.number,

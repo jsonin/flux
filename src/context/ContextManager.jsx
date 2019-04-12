@@ -121,7 +121,7 @@ class ContextManager {
     }
 
     contextUpdated = () => {
-        this.onContextUpdate();
+        if (this.onContextUpdate) this.onContextUpdate();
         // After updating, update all subscribers
         for (const subscriberObj of this.subscribers) { 
             const { callback } = subscriberObj;
@@ -130,12 +130,16 @@ class ContextManager {
     }
 
     adjustActiveContexts(shouldContextBeActive) {
-        this.activeContexts = [];
+        let newActiveContexts = [];
         this.contexts.forEach((context) => {
             if (shouldContextBeActive(context)) {
-                this.activeContexts.push(context);
+                newActiveContexts.push(context);
             }
         });
+
+        const isSame = this.activeContexts.length === newActiveContexts.length && this.activeContexts.every(function(value, index) { return value === newActiveContexts[index]});
+        this.activeContexts = newActiveContexts;
+        return !isSame;
     }
 
     getContextsBeforeShortcut(shortcut, contextType = undefined) {
@@ -167,7 +171,7 @@ class ContextManager {
         //when adding a new shortcut to context, we assume cursor ends up after it so its active
         this.activeContexts.unshift(shortcut);
         if (!shortcut.needToSelectValueFromMultipleOptions()) {
-            if (this.onContextUpdate) { this.contextUpdated(); }
+            this.contextUpdated();
         }
     }
 
@@ -181,6 +185,7 @@ class ContextManager {
         this.contexts.splice(index, 1);
 
         this.removeShortcutFromActiveContexts(shortcut);
+        this.contextUpdated();
     }
 
     removeShortcutFromActiveContexts(shortcut) {
