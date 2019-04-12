@@ -620,7 +620,7 @@ NoteAssistant.propTypes = {
     closeNote: PropTypes.func.isRequired,
     currentlyEditingEntryId: PropTypes.number.isRequired,
     contextManager: PropTypes.object.isRequired,
-    contextTrayItemToInsert: PropTypes.string,
+    contextTrayItemToInsert: PropTypes.object,
     deleteSelectedNote: PropTypes.func.isRequired,
     handleSummaryItemSelected: PropTypes.func.isRequired,
     handleUpdateArrayOfPickLists: PropTypes.func.isRequired,

@@ -773,7 +773,7 @@ class FluxNotesEditor extends React.Component {
             this.updateTemplateWithPickListOptions(nextProps);
         }
 
-        if (nextProps.shouldEditorContentUpdate && this.props.contextTrayItemToInsert !== nextProps.contextTrayItemToInsert && !Lang.isNull(nextProps.contextTrayItemToInsert) && nextProps.contextTrayItemToInsert.length > 0) {
+        if (nextProps.shouldEditorContentUpdate && this.props.contextTrayItemToInsert !== nextProps.contextTrayItemToInsert && !Lang.isNull(nextProps.contextTrayItemToInsert) && nextProps.contextTrayItemToInsert) {
             this.insertContextTrayItem(nextProps.contextTrayItemToInsert);
         }
 
@@ -1486,70 +1486,44 @@ class FluxNotesEditor extends React.Component {
      *  If not, function will call insertTextWithStructuredPhrases to insert completed contextTrayItem into editor
      */
     insertContextTrayItem = (contextTrayItem) => {
-        let remainder = contextTrayItem;
-        let start, end;
-        let localArrayOfPickLists = [];
-        // console.log("insertContextTrayItem", contextTrayItem);
-        this.noteParser.getListOfTriggersFromText(contextTrayItem)[0].then((triggers) => {
-            // console.log(triggers);
-            // Loop through shortcut triggers to determine if any of them require users to choose from pick list
-            if (!Lang.isNull(triggers)) {
-                triggers.forEach((trigger) => {
-                    if (!Lang.isNull(trigger)) {
-                        // console.log(trigger);
-                        start = remainder.indexOf(trigger.trigger);
-                        if (start > -1) {
-                            remainder = remainder.substring(start + trigger.trigger.length);
-    
-                            // Check if the shortcut is a pick list. If it is a pick list, check if it already has an option selected
-                            // If no option is selected, then push the shortcut to the array
-                            if (this.noteParser.isPickList(trigger) && !(remainder.startsWith("[["))) {
-                                localArrayOfPickLists.push(trigger);
-                            }
-        
-                            if (remainder.startsWith("[[")) {
-                                end = remainder.indexOf("]]");
-                                // FIXME: 2 is a magic number based on [[ length, ditto for 2 below for ]]
-                                remainder = remainder.substring(end + 2);
-                            }
-                        }
-                    }
-                });
-            }
+        const currentState = this.state.state;
+        let transform = currentState.transform();
 
+        const trigger = contextTrayItem;
+
+        if (!Lang.isNull(trigger)) {
+
+            const shortcutsUntilSelection = this.getContextsBeforeSelection(transform.state);
             // Build array of pick lists and store options for each pick list
-            if (localArrayOfPickLists.length > 0) {
-                let localArrayOfPickListsWithOptions = [];
-                let shortcutOptions = [];
+            if (this.noteParser.isPickList(trigger)) {
 
-                localArrayOfPickLists.forEach((pickList) => {
-                    // Create shortcut from trigger to be inserted before selection chosen. Also uses to get shortcutOptions.
-                    let shortcut = this.props.shortcutManager.createShortcut(pickList.definition, pickList.trigger, this.props.patient, '', false);
-                    shortcut.setSource("pick list/template");
-                    shortcut.initialize(this.props.contextManager, pickList.trigger, false);
+                // Create shortcut from trigger to be inserted before selection chosen. Also uses to get shortcutOptions.
+                let shortcut = this.props.shortcutManager.createShortcut(trigger.definition, trigger.name, this.props.patient, '', false);
+                shortcut.setSource("context tray");
+                shortcut.initialize(this.props.contextManager, trigger.name, false);
 
-                    shortcutOptions = shortcut.getValueSelectionOptions();
-                    localArrayOfPickListsWithOptions.push(
-                        {
-                            'trigger': pickList.trigger,
-                            'options': shortcutOptions,
-                            'shortcut': shortcut
-                        }
-                    )
-                });
+                const shortcutOptions = shortcut.getValueSelectionOptions();
 
-                this.props.handleUpdateArrayOfPickLists(localArrayOfPickListsWithOptions);
+                this.props.handleUpdateArrayOfPickLists([ { "trigger": trigger.name, "options": shortcutOptions, "shortcut": shortcut }]);
                 this.props.setNoteViewerEditable(false);
                 // Switch note assistant view to the pick list options panel
                 this.props.updateNoteAssistantMode('pick-list-options-panel');
                 // Insert content by default
-                this.insertTextWithStructuredPhrases(contextTrayItem, undefined, true, "Picklist", localArrayOfPickListsWithOptions);
+                //this.insertTextWithStructuredPhrases(contextTrayItem, undefined, true, "Picklist", localArrayOfPickListsWithOptions);
+
+                // Update the context position based on selection
+                transform = this.updateExistingShortcut(shortcut, transform, shortcutsUntilSelection.length);
             } else { // If the text to be inserted does not contain any pick lists, insert the text
-                this.insertTextWithStructuredPhrases(contextTrayItem, undefined, true, "Shortcuts in Context");
+                //this.insertTextWithStructuredPhrases(contextTrayItem, undefined, true, "Shortcuts in Context");
+                transform = this.insertShortcut(trigger.definition, trigger.name, "", transform, true, "context tray", shortcutsUntilSelection.length);
+                this.adjustActiveContexts(transform.state.selection, transform.state); // Updates active contexts based on cursor position
+
                 this.props.updateContextTrayItemToInsert(null);
                 this.props.updateNoteAssistantMode('context-tray');
             }
-        });
+            const state = transform.apply();
+            this.setState({ state });
+        }
     }
 
     /**
@@ -1963,7 +1937,7 @@ FluxNotesEditor.propTypes = {
     changeShortcutType: PropTypes.func.isRequired,
     closeNote: PropTypes.func.isRequired,
     contextManager: PropTypes.object.isRequired,
-    contextTrayItemToInsert: PropTypes.string,
+    contextTrayItemToInsert: PropTypes.object,
     currentViewMode: PropTypes.string.isRequired,
     errors: PropTypes.array.isRequired,
     handleUpdateEditorWithNote: PropTypes.func.isRequired,
