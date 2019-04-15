@@ -26,20 +26,22 @@ export default class CreatorChild extends Shortcut {
 
         super.determineParentContext(contextManager, this.metadata["knownParentContexts"], this.metadata["parentAttribute"]);
 
-        //console.log("set parent context to " + this.parentContext);
         if (!Lang.isUndefined(this.parentContext)) {
             this.parentContext.addChild(this);
         }
         var found = false;
         var picker = false;
-        //console.log(trigger);
-        /*        const triggerNoPrefix = trigger.substring(1);
-         console.log("trigger no prefix = " + triggerNoPrefix);*/
-         //console.log(this.metadata.stringTriggers);
+        const prefix = this.getPrefixCharacter();
+        let triggerWithPrefix;
+         if (!trigger.startsWith(prefix)) {
+             triggerWithPrefix = `${prefix}${trigger}`;
+         } else {
+             triggerWithPrefix = trigger;
+         }
         if (this.metadata.stringTriggers) {
             for (var i = 0; i < this.metadata.stringTriggers.length; i++) {
                 //console.log("  is string trigger? " + this.metadata.stringTriggers[i].name);
-                if (this.metadata.stringTriggers[i].name === trigger) {
+                if (this.metadata.stringTriggers[i].name === triggerWithPrefix) {
                     found = true;
                     if (this.metadata.stringTriggers[i].picker) {
                         picker = true;
@@ -49,7 +51,6 @@ export default class CreatorChild extends Shortcut {
             }
         }
         if (!found || !picker) {
-            //console.log("not found: " + trigger);
             this.setText(trigger, updatePatient);
             this.clearValueSelectionOptions();
         }
