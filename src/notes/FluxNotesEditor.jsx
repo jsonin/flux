@@ -27,6 +27,7 @@ import './FluxNotesEditor.css';
 import { setTimeout } from 'timers';
 import NoteContentIndexer from '../patientControl/NoteContentIndexer';
 import InsertValue from '../shortcuts/InsertValue';
+import SingleHashtagKeyword from '../shortcuts/SingleHashtagKeyword';
 
 // This forces the initial block to be inline instead of a paragraph. When insert structured field, prevents adding new lines
 const initialState = Slate.Plain.deserialize('');
@@ -401,21 +402,31 @@ class FluxNotesEditor extends React.Component {
     }
 
     openGetHelpPortal(shortcut, transform) {
-        // let portalOptions = shortcut.getValueSelectionOptions();
-
         this.setState({
             openedPortal: 'ContextPortal',
-            portalOptions: [{key: 'Get Help', context: 'Get Help'}],
+            portalOptions: [{key: 'Get Help', context: `Get help with ${shortcut.initiatingTrigger}`, shortcut}],
             isGetHelpPortal: true,
             needToDelete: false
         });
-        // this.selectingForShortcut = shortcut;
         return transform; // figure out how to make portal out of focus
+    }
+
+    expandShortcut(state, shortcut) {
+        console.log(`PLEASE EXPAND ${shortcut.initiatingTrigger}`);
+        this.setState({
+            openedPortal: null,
+            portalOptions: null,
+            isGetHelpPortal: null
+        });
     }
 
     // called from portal when an item is selected (selection is not null) or if portal is closed without
     // selection (selection is null)
     onPortalSelection = (state, selection) => {
+        console.log(selection);
+        if (!selection) return state;
+        if (this.state.isGetHelpPortal) return this.expandShortcut(state, selection.shortcut);
+
         let shortcut = this.selectingForShortcut;
         this.selectingForShortcut = null;
         this.setState({ 
@@ -486,6 +497,7 @@ class FluxNotesEditor extends React.Component {
     }
 
     onChange = (state) => {
+        if (!state) return; //TODO: what?
         let documentText = this.getNoteText(state);
         this.props.updateLocalDocumentText(documentText);
 
@@ -508,11 +520,33 @@ class FluxNotesEditor extends React.Component {
         const previousNode = state.document.getPreviousSibling(selection.anchorKey);
         if (previousNode && previousNode.type === 'structured_field') {
             const previousShortcut = previousNode.data.get('shortcut');
-            // TO DO CHECK IF IN CONTEXT
-            if (!previousShortcut.isComplete) {
+            // TODO: instanceof SingleHashKeyword probably shouldn't be here. find a different case to check
+            // that doesn't capture @condition for example.
+            // !shortcut.needToSelectValueFromMultipleOptions() is a possiblility
+            if (!previousShortcut.isComplete && previousShortcut instanceof SingleHashtagKeyword && previousShortcut.isInContext) {
                 transform = this.openGetHelpPortal(previousShortcut, transform);
             }
         }
+        // TODO: This currently breaks selection of item, but we need to close the portal when you're not next to an expandable incomplete shortcut.
+        // if (previousNode && previousNode.type === 'structured_field') {
+        //     const previousShortcut = previousNode.data.get('shortcut');
+        //     // TODO: instanceof SingleHashKeyword probably shouldn't be here. find a different case to check
+        //     // that doesn't capture @condition for example.
+        //     // !shortcut.needToSelectValueFromMultipleOptions() is a possiblility
+        //     if (!previousShortcut.isComplete && previousShortcut instanceof SingleHashtagKeyword && previousShortcut.isInContext) {
+        //         transform = this.openGetHelpPortal(previousShortcut, transform);
+        //     } else if (this.state.isGetHelpPortal) {
+        //         this.setState({
+        //             openedPortal: null,
+        //             portalOptions: null
+        //         });
+        //     }
+        // } else if (this.state.isGetHelpPortal) {
+        //     this.setState({
+        //         openedPortal: null,
+        //         portalOptions: null
+        //     });
+        // }
 
         this.setState({ state: transform.apply() });
     }
@@ -648,6 +682,18 @@ class FluxNotesEditor extends React.Component {
 
     onSelectionChange = (selection, state) => {
         this.adjustActiveContexts(selection, state);
+        // TODO: See if it's beter here or onChange, not sure.
+        // const previousNode = state.document.getPreviousSibling(selection.anchorKey);
+        // if (previousNode && previousNode.type === 'structured_field') {
+        //     const previousShortcut = previousNode.data.get('shortcut');
+        //     // TODO: instanceof SingleHashKeyword probably shouldn't be here. find a different case to check
+        //     // that doesn't capture @condition for example.
+        //     // !shortcut.needToSelectValueFromMultipleOptions() is a possiblility
+        //     if (!previousShortcut.isComplete && previousShortcut instanceof SingleHashtagKeyword && previousShortcut.isInContext) {
+        //         const transform = this.openGetHelpPortal(previousShortcut, state.transform());
+        //         this.setState({ state: transform.apply() });
+        //     }
+        // }
     }
 
     adjustActiveContexts = (selection, state) => {
@@ -1950,6 +1996,7 @@ class FluxNotesEditor extends React.Component {
                         openedPortal={this.state.openedPortal}
                         onSelected={this.onPortalSelection}
                         state={this.state.state}
+                        expandShortcut={this.expandShortcut.bind(this)}
                         trigger={"@"}
                     />
                 </div>

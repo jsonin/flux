@@ -45,7 +45,7 @@ class ContextPortal extends React.Component {
      * Updates state when context updates 
      */
     componentWillReceiveProps = (nextProps) => {
-        if (nextProps.contexts !== this.props.contexts) {
+        if (!this.props.isGetHelp && nextProps.contexts !== this.props.contexts) {
             this.setState({
                 selectedIndex: 0
             });
@@ -71,7 +71,7 @@ class ContextPortal extends React.Component {
      */
     onOpen = (portal) => {
         if (this.props.isGetHelp) {
-            this.setState({ selectedIndex: -1, menu: portal.firstChild, active: false, justActive: true });
+            this.setState({ selectedIndex: -1, menu: portal.firstChild, active: false, justActive: false });
         } else {
             this.setState({ menu: portal.firstChild, active: true, justActive: true });
         }
@@ -92,7 +92,20 @@ class ContextPortal extends React.Component {
      * Only trigger keydown if the portal wasn't just activated
      */
     handleKeydownCP = (e) => {
-        if (this.state.active) {
+        if (this.props.isGetHelp) {
+            const keyCode = e.which;
+            if (keyCode === DOWN_ARROW_KEY || keyCode === UP_ARROW_KEY) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.setState({
+                    selectedIndex: keyCode === DOWN_ARROW_KEY ? 0 : -1
+                });
+            } else if (keyCode === ENTER_KEY && this.state.selectedIndex === 0) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.props.expandShortcut(this.props.state, this.props.contexts[this.state.selectedIndex].shortcut);
+            }
+        } else if (this.state.active) {
             e.preventDefault();
             e.stopPropagation();
             if (this.state.justActive) { // eat key that made us become active
@@ -222,7 +235,7 @@ class ContextPortal extends React.Component {
     render = () => {
         const TYPE_LIST = 0;
         const TYPE_CALENDAR = 1;
-        const { contexts, openedPortal, isGetHelp } = this.props;
+        const { contexts, openedPortal } = this.props;
         let type;
         let className = "context-portal";
         if (Lang.isNull(contexts)) return null;
@@ -264,6 +277,7 @@ ContextPortal.proptypes = {
     onSelected: PropTypes.func.isRequired,
     state: PropTypes.object.isRequired,
     trigger: PropTypes.string.isRequired,
+    expandShortcut: PropTypes.func
 }
 
 export default ContextPortal
